@@ -1,0 +1,488 @@
+{
+  "testSets": [
+    {
+      "id": "test-1",
+      "title": "Full test 1: Food & Daily Life + Describe a meal you enjoyed",
+      "bandRange": "4.0-5.0",
+      "parts": {
+        "1": {
+          "topic": "Food and Daily Routine",
+          "thinkingSeconds": 15,
+          "answerSeconds": 60,
+          "questions": [
+            {
+              "id": "t1-p1-q1",
+              "question": "What kind of food do you like to eat?"
+            },
+            {
+              "id": "t1-p1-q2",
+              "question": "Do you usually eat breakfast in the morning?"
+            },
+            {
+              "id": "t1-p1-q3",
+              "question": "Do you prefer to cook at home or eat out?"
+            }
+          ]
+        },
+        "2": {
+          "topic": "A Meal You Enjoyed",
+          "prepSeconds": 60,
+          "answerSeconds": 120,
+          "questions": [
+            {
+              "id": "t1-p2-q1",
+              "question": "Describe a meal you really enjoyed.",
+              "cueCard": [
+                "Where you had this meal",
+                "What you ate",
+                "Who you were with",
+                "Why you enjoyed it so much"
+              ]
+            }
+          ]
+        },
+        "3": {
+          "topic": "Eating Habits",
+          "thinkingSeconds": 15,
+          "answerSeconds": 60,
+          "questions": [
+            {
+              "id": "t1-p3-q1",
+              "question": "Do people in your country eat more at home or in restaurants?"
+            },
+            {
+              "id": "t1-p3-q2",
+              "question": "Why do some people like fast food?"
+            },
+            {
+              "id": "t1-p3-q3",
+              "question": "Do you think children should learn to cook?"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "test-2",
+      "title": "Full test 2: Education & Hobbies + Describe a teacher you remember",
+      "bandRange": "5.0-6.0",
+      "parts": {
+        "1": {
+          "topic": "Education and Learning",
+          "thinkingSeconds": 15,
+          "answerSeconds": 60,
+          "questions": [
+            {
+              "id": "t2-p1-q1",
+              "question": "What subjects did you enjoy most at school, and why?"
+            },
+            {
+              "id": "t2-p1-q2",
+              "question": "Do you think it is better to study alone or in a group?"
+            },
+            {
+              "id": "t2-p1-q3",
+              "question": "How has technology changed the way people learn in your country?"
+            }
+          ]
+        },
+        "2": {
+          "topic": "A Teacher You Remember Well",
+          "prepSeconds": 60,
+          "answerSeconds": 120,
+          "questions": [
+            {
+              "id": "t2-p2-q1",
+              "question": "Describe a teacher who had a big influence on you.",
+              "cueCard": [
+                "Who this teacher was and what subject they taught",
+                "What made their teaching style special",
+                "How they influenced your attitude toward learning",
+                "Why you still remember this teacher"
+              ]
+            }
+          ]
+        },
+        "3": {
+          "topic": "The Role of Teachers in Society",
+          "thinkingSeconds": 15,
+          "answerSeconds": 60,
+          "questions": [
+            {
+              "id": "t2-p3-q1",
+              "question": "What qualities do you think a good teacher should have?"
+            },
+            {
+              "id": "t2-p3-q2",
+              "question": "Some people say that online courses will replace traditional classrooms. Do you agree?"
+            },
+            {
+              "id": "t2-p3-q3",
+              "question": "How important is it for teachers to make lessons interesting rather than just informative?"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "test-3",
+      "title": "Full test 3: Science & Technology + Describe a person who taught you a new skill",
+      "bandRange": "6.0-7.0",
+      "parts": {
+        "1": {
+          "topic": "Science and Technology in Everyday Life",
+          "thinkingSeconds": 15,
+          "answerSeconds": 60,
+          "questions": [
+            {
+              "id": "t3-p1-q1",
+              "question": "How much do you rely on technology in your daily routine?"
+            },
+            {
+              "id": "t3-p1-q2",
+              "question": "Do you think scientific discoveries have made people's lives easier or more complicated?"
+            },
+            {
+              "id": "t3-p1-q3",
+              "question": "What technological invention do you think has had the greatest impact on society?"
+            }
+          ]
+        },
+        "2": {
+          "topic": "A Person Who Taught You a New Skill",
+          "prepSeconds": 60,
+          "answerSeconds": 120,
+          "questions": [
+            {
+              "id": "t3-p2-q1",
+              "question": "Describe a person who taught you a useful skill.",
+              "cueCard": [
+                "Who this person was and how you know them",
+                "What skill they taught you and how they taught it",
+                "How difficult it was to learn this skill",
+                "How this skill has been useful in your life since then"
+              ]
+            }
+          ]
+        },
+        "3": {
+          "topic": "Learning, Innovation, and Social Change",
+          "thinkingSeconds": 15,
+          "answerSeconds": 60,
+          "questions": [
+            {
+              "id": "t3-p3-q1",
+              "question": "To what extent should governments invest in scientific research, even when the benefits are not immediately obvious?"
+            },
+            {
+              "id": "t3-p3-q2",
+              "question": "Some people argue that social media has reduced the quality of human interaction. What is your view?"
+            },
+            {
+              "id": "t3-p3-q3",
+              "question": "How can societies ensure that technological progress benefits everyone, not just the wealthy?"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "test-4",
+      "title": "Full test 4: Globalization & Philosophy + Describe a controversial decision you had to make",
+      "bandRange": "7.0-8.0",
+      "parts": {
+        "1": {
+          "topic": "Globalization and Cultural Identity",
+          "thinkingSeconds": 15,
+          "answerSeconds": 60,
+          "questions": [
+            {
+              "id": "t4-p1-q1",
+              "question": "In what ways has globalization affected the cultural identity of your country?"
+            },
+            {
+              "id": "t4-p1-q2",
+              "question": "Do you believe that the widespread use of English as a global language threatens linguistic diversity?"
+            },
+            {
+              "id": "t4-p1-q3",
+              "question": "How do you think local traditions can coexist with the pressures of modernization?"
+            }
+          ]
+        },
+        "2": {
+          "topic": "A Controversial Decision You Had to Make",
+          "prepSeconds": 60,
+          "answerSeconds": 120,
+          "questions": [
+            {
+              "id": "t4-p2-q1",
+              "question": "Describe a time when you had to make a difficult decision that not everyone agreed with.",
+              "cueCard": [
+                "What the decision was and what circumstances led to it",
+                "What the different perspectives or arguments were",
+                "How you ultimately reached your decision",
+                "What the consequences of your decision were and whether you would make the same choice again"
+              ]
+            }
+          ]
+        },
+        "3": {
+          "topic": "Ethics, Policy, and the Future of Society",
+          "thinkingSeconds": 15,
+          "answerSeconds": 60,
+          "questions": [
+            {
+              "id": "t4-p3-q1",
+              "question": "To what extent should individual freedoms be restricted for the collective well-being of society?"
+            },
+            {
+              "id": "t4-p3-q2",
+              "question": "Some philosophers argue that the pursuit of economic growth is fundamentally incompatible with environmental sustainability. How far do you agree with this view?"
+            },
+            {
+              "id": "t4-p3-q3",
+              "question": "How should governments balance the need for technological innovation with the ethical concerns that such innovations raise, particularly in areas like artificial intelligence and genetic engineering?"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "readingPractice": {
+    "vocabulary": [
+      {
+        "id": "v1",
+        "level": "4.0-5.0",
+        "word": "delicious",
+        "phonetic": "/dɪˈlɪʃ.əs/",
+        "exampleSentence": "The food at the restaurant was really delicious.",
+        "vietnameseMeaning": "Ngon, thơm ngon"
+      },
+      {
+        "id": "v2",
+        "level": "4.0-5.0",
+        "word": "comfortable",
+        "phonetic": "/ˈkʌm.fə.tə.bəl/",
+        "exampleSentence": "My new apartment is very comfortable to live in.",
+        "vietnameseMeaning": "Thoải mái, dễ chịu"
+      },
+      {
+        "id": "v3",
+        "level": "4.0-5.0",
+        "word": "convenient",
+        "phonetic": "/kənˈviː.ni.ənt/",
+        "exampleSentence": "Living near a supermarket is very convenient.",
+        "vietnameseMeaning": "Thuận tiện, tiện lợi"
+      },
+      {
+        "id": "v4",
+        "level": "4.0-5.0",
+        "word": "routine",
+        "phonetic": "/ruːˈtiːn/",
+        "exampleSentence": "I follow the same routine every morning before work.",
+        "vietnameseMeaning": "Thói quen, lệ thường"
+      },
+      {
+        "id": "v5",
+        "level": "4.0-5.0",
+        "word": "favourite",
+        "phonetic": "/ˈfeɪ.vər.ɪt/",
+        "exampleSentence": "My favourite season is spring because the weather is mild.",
+        "vietnameseMeaning": "Yêu thích nhất, ưa chuộng"
+      },
+      {
+        "id": "v6",
+        "level": "5.0-6.0",
+        "word": "beneficial",
+        "phonetic": "/ˌben.ɪˈfɪʃ.əl/",
+        "exampleSentence": "Regular exercise is extremely beneficial for both physical and mental health.",
+        "vietnameseMeaning": "Có lợi, có ích"
+      },
+      {
+        "id": "v7",
+        "level": "5.0-6.0",
+        "word": "opportunity",
+        "phonetic": "/ˌɒp.əˈtʃuː.nə.ti/",
+        "exampleSentence": "Studying abroad gives students the opportunity to experience different cultures.",
+        "vietnameseMeaning": "Cơ hội"
+      },
+      {
+        "id": "v8",
+        "level": "5.0-6.0",
+        "word": "influence",
+        "phonetic": "/ˈɪn.flu.əns/",
+        "exampleSentence": "Parents have a strong influence on their children's behaviour.",
+        "vietnameseMeaning": "Ảnh hưởng, tác động"
+      },
+      {
+        "id": "v9",
+        "level": "5.0-6.0",
+        "word": "participate",
+        "phonetic": "/pɑːˈtɪs.ɪ.peɪt/",
+        "exampleSentence": "Students are encouraged to participate in extracurricular activities.",
+        "vietnameseMeaning": "Tham gia"
+      },
+      {
+        "id": "v10",
+        "level": "5.0-6.0",
+        "word": "significant",
+        "phonetic": "/sɪɡˈnɪf.ɪ.kənt/",
+        "exampleSentence": "There has been a significant increase in the use of public transport.",
+        "vietnameseMeaning": "Quan trọng, đáng kể"
+      },
+      {
+        "id": "v11",
+        "level": "6.0-7.0",
+        "word": "sustainability",
+        "phonetic": "/səˌsteɪ.nəˈbɪl.ə.ti/",
+        "exampleSentence": "Many companies are now focusing on sustainability to reduce their environmental impact.",
+        "vietnameseMeaning": "Tính bền vững"
+      },
+      {
+        "id": "v12",
+        "level": "6.0-7.0",
+        "word": "innovation",
+        "phonetic": "/ˌɪn.əˈveɪ.ʃən/",
+        "exampleSentence": "Technological innovation has transformed the way we communicate with each other.",
+        "vietnameseMeaning": "Sự đổi mới, sáng kiến"
+      },
+      {
+        "id": "v13",
+        "level": "6.0-7.0",
+        "word": "predominantly",
+        "phonetic": "/prɪˈdɒm.ɪ.nənt.li/",
+        "exampleSentence": "The workforce in this industry is predominantly young and highly educated.",
+        "vietnameseMeaning": "Chủ yếu, phần lớn"
+      },
+      {
+        "id": "v14",
+        "level": "6.0-7.0",
+        "word": "exacerbate",
+        "phonetic": "/ɪɡˈzæs.ə.beɪt/",
+        "exampleSentence": "The lack of affordable housing has exacerbated the homelessness crisis in major cities.",
+        "vietnameseMeaning": "Làm trầm trọng thêm"
+      },
+      {
+        "id": "v15",
+        "level": "6.0-7.0",
+        "word": "resilience",
+        "phonetic": "/rɪˈzɪl.i.əns/",
+        "exampleSentence": "Communities often show remarkable resilience in the aftermath of natural disasters.",
+        "vietnameseMeaning": "Khả năng phục hồi, sự kiên cường"
+      },
+      {
+        "id": "v16",
+        "level": "7.0-8.0",
+        "word": "unprecedented",
+        "phonetic": "/ʌnˈpres.ɪ.den.tɪd/",
+        "exampleSentence": "The pandemic caused an unprecedented disruption to global supply chains.",
+        "vietnameseMeaning": "Chưa từng có tiền lệ"
+      },
+      {
+        "id": "v17",
+        "level": "7.0-8.0",
+        "word": "juxtaposition",
+        "phonetic": "/ˌdʒʌk.stə.pəˈzɪʃ.ən/",
+        "exampleSentence": "The juxtaposition of extreme wealth and poverty in the city raises serious ethical questions.",
+        "vietnameseMeaning": "Sự đặt cạnh nhau, sự tương phản"
+      },
+      {
+        "id": "v18",
+        "level": "7.0-8.0",
+        "word": "ubiquitous",
+        "phonetic": "/juːˈbɪk.wɪ.təs/",
+        "exampleSentence": "Smartphones have become ubiquitous, fundamentally altering social behaviour across all demographics.",
+        "vietnameseMeaning": "Có mặt khắp nơi, phổ biến"
+      },
+      {
+        "id": "v19",
+        "level": "7.0-8.0",
+        "word": "paradigm",
+        "phonetic": "/ˈpær.ə.daɪm/",
+        "exampleSentence": "The shift toward remote work represents a paradigm change in how organisations think about productivity.",
+        "vietnameseMeaning": "Mô hình, khuôn mẫu"
+      },
+      {
+        "id": "v20",
+        "level": "7.0-8.0",
+        "word": "dichotomy",
+        "phonetic": "/daɪˈkɒt.ə.mi/",
+        "exampleSentence": "The dichotomy between economic development and environmental conservation remains one of the defining challenges of our era.",
+        "vietnameseMeaning": "Sự phân đôi, sự đối lập"
+      }
+    ],
+    "sentences": [
+      {
+        "id": "s1",
+        "level": "4.0-5.0",
+        "topic": "Daily Life",
+        "text": "I usually wake up at seven o'clock and have breakfast with my family before I go to work.",
+        "vietnameseMeaning": "Tôi thường thức dậy lúc bảy giờ và ăn sáng cùng gia đình trước khi đi làm."
+      },
+      {
+        "id": "s2",
+        "level": "4.0-5.0",
+        "topic": "Hometown",
+        "text": "My hometown is a small city near the coast, and it is famous for its fresh seafood.",
+        "vietnameseMeaning": "Quê tôi là một thành phố nhỏ gần biển, và nó nổi tiếng với hải sản tươi sống."
+      },
+      {
+        "id": "s3",
+        "level": "5.0-6.0",
+        "topic": "Education",
+        "text": "I believe that education plays a crucial role in helping young people develop the skills they need to succeed in the modern workplace.",
+        "vietnameseMeaning": "Tôi tin rằng giáo dục đóng vai trò quan trọng trong việc giúp người trẻ phát triển các kỹ năng cần thiết để thành công trong môi trường làm việc hiện đại."
+      },
+      {
+        "id": "s4",
+        "level": "5.0-6.0",
+        "topic": "Travel",
+        "text": "Travelling to different countries allows people to broaden their horizons and gain a deeper understanding of other cultures.",
+        "vietnameseMeaning": "Du lịch đến các quốc gia khác nhau cho phép mọi người mở rộng tầm nhìn và hiểu sâu hơn về các nền văn hóa khác."
+      },
+      {
+        "id": "s5",
+        "level": "5.0-6.0",
+        "topic": "Health",
+        "text": "Maintaining a balanced diet and exercising regularly are considered essential for leading a healthy lifestyle.",
+        "vietnameseMeaning": "Duy trì chế độ ăn uống cân bằng và tập thể dục thường xuyên được coi là thiết yếu để có một lối sống lành mạnh."
+      },
+      {
+        "id": "s6",
+        "level": "6.0-7.0",
+        "topic": "Technology",
+        "text": "While technological advancements have undeniably improved our standard of living, they have also given rise to concerns about data privacy and the displacement of traditional jobs.",
+        "vietnameseMeaning": "Mặc dù những tiến bộ công nghệ đã cải thiện mức sống của chúng ta một cách không thể phủ nhận, chúng cũng làm dấy lên lo ngại về quyền riêng tư dữ liệu và sự thay thế các công việc truyền thống."
+      },
+      {
+        "id": "s7",
+        "level": "6.0-7.0",
+        "topic": "Environment",
+        "text": "Governments around the world are under increasing pressure to implement policies that address climate change, yet progress remains slow due to competing economic interests.",
+        "vietnameseMeaning": "Các chính phủ trên toàn thế giới đang chịu áp lực ngày càng lớn trong việc thực hiện các chính sách giải quyết biến đổi khí hậu, nhưng tiến độ vẫn chậm do các lợi ích kinh tế cạnh tranh."
+      },
+      {
+        "id": "s8",
+        "level": "7.0-8.0",
+        "topic": "Globalization",
+        "text": "The inexorable march of globalization has engendered a paradox whereby cultures are simultaneously becoming more interconnected and yet more fiercely protective of their distinctive identities.",
+        "vietnameseMeaning": "Bước tiến không thể ngăn cản của toàn cầu hóa đã tạo ra một nghịch lý trong đó các nền văn hóa đồng thời trở nên kết nối hơn nhưng cũng bảo vệ bản sắc riêng biệt của mình một cách mãnh liệt hơn."
+      },
+      {
+        "id": "s9",
+        "level": "7.0-8.0",
+        "topic": "Philosophy",
+        "text": "The notion that material prosperity alone can guarantee societal well-being has been increasingly called into question by researchers who advocate for a more holistic measure of progress that encompasses mental health, social cohesion, and environmental stewardship.",
+        "vietnameseMeaning": "Quan niệm rằng chỉ riêng sự thịnh vượng vật chất có thể đảm bảo phúc lợi xã hội ngày càng bị các nhà nghiên cứu đặt câu hỏi, những người ủng hộ một thước đo tiến bộ toàn diện hơn bao gồm sức khỏe tinh thần, sự gắn kết xã hội và quản lý môi trường."
+      },
+      {
+        "id": "s10",
+        "level": "7.0-8.0",
+        "topic": "Policy and Ethics",
+        "text": "Policymakers face the unenviable task of reconciling the imperatives of economic growth with the moral obligation to safeguard the interests of future generations, a challenge that demands not only political will but also a fundamental reconceptualization of what constitutes genuine progress.",
+        "vietnameseMeaning": "Các nhà hoạch định chính sách đối mặt với nhiệm vụ khó khăn trong việc dung hòa các mệnh lệnh của tăng trưởng kinh tế với nghĩa vụ đạo đức bảo vệ lợi ích của các thế hệ tương lai, một thách thức đòi hỏi không chỉ ý chí chính trị mà còn sự tái khái niệm hóa căn bản về những gì cấu thành tiến bộ thực sự."
+      }
+    ]
+  }
+}

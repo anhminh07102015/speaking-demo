@@ -1,0 +1,25 @@
+<div class="exam-subheader">
+  <span id="exam-part-indicator">Part 1 - Q1/3</span>
+  <span style="flex:1"></span>
+  <span id="exam-timer"></span>
+  <button id="skip-thinking-btn" class="hidden">Bỏ qua</button>
+</div>
+
+<!-- Cue card for Part 2 -->
+<div id="cue-card-area" class="hidden" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
+  <h4 style="margin-bottom:10px;color:var(--text2);font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">You should say:</h4>
+  <ul id="cue-card-list" style="padding-left:20px;color:var(--text);font-size:14px;line-height:1.8;"></ul>
+</div>
+
+<div class="question-card">
+  <span class="speaker-icon" id="replay-btn" title="Nghe lại">&#128264;</span>
+  <h3 id="exam-phase-label">Question</h3>
+  <p id="question-text"></p>
+</div>
+
+<div class="controls">
+  <button class="mic-pill" id="mic-pill" disabled>&#127908; Bắt đầu nói</button>
+</div>
+
+<p id="status-text" style="text-align:center;color:var(--text2);font-size:14px;"></p>
+<div id="live-transcript-area" class="hidden"></div>

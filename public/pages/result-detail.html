@@ -1,0 +1,30 @@
+<div class="exam-subheader" style="justify-content:space-between;">
+  <button class="btn btn-outline" id="result-prev-btn" style="padding:6px 16px;font-size:13px;">&larr; Trước</button>
+  <span id="result-turn-indicator">Lượt 1/3</span>
+  <button class="btn btn-outline" id="result-next-btn" style="padding:6px 16px;font-size:13px;">Tiếp &rarr;</button>
+</div>
+
+<div class="result-columns">
+  <div class="result-left">
+    <h4 style="color:var(--text2);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Câu hỏi</h4>
+    <p id="result-question" style="font-size:16px;font-weight:600;margin-bottom:16px;"></p>
+    <h4 style="color:var(--text2);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Câu trả lời của bạn</h4>
+    <div id="result-transcript" class="transcript-highlight" style="margin-bottom:16px;"></div>
+    <div id="result-audio" class="audio-player"></div>
+    <div class="band-display" id="result-band" style="margin-top:16px;"></div>
+    <div class="scores-grid" id="result-scores"></div>
+  </div>
+  <div class="result-right">
+    <div class="result-tabs" id="result-tabs">
+      <button class="tab active" data-tab="strengths">Ưu điểm</button>
+      <button class="tab" data-tab="weaknesses">Cần cải thiện</button>
+      <button class="tab" data-tab="upgraded">Bài nâng cấp</button>
+      <button class="tab" data-tab="model">Bài mẫu</button>
+    </div>
+    <div id="result-tab-content"></div>
+  </div>
+</div>
+
+<div style="text-align:center;margin-top:24px;">
+  <button class="btn btn-primary" id="result-summary-btn" style="max-width:300px;">Xem tổng kết</button>
+</div>

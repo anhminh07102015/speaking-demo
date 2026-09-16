@@ -1,0 +1,56 @@
+<div class="exam-subheader">
+  <span id="reading-progress">1 / 10</span>
+  <span style="flex:1"></span>
+  <button class="btn btn-outline" id="reading-skip-btn" style="padding:6px 16px;font-size:13px;">Tiếp theo</button>
+</div>
+
+<div class="reading-card">
+  <p id="reading-text" style="font-size:22px;font-weight:600;margin-bottom:12px;"></p>
+  <p id="reading-phonetic" style="font-size:14px;opacity:0.8;"></p>
+  <p id="reading-meaning" style="font-size:14px;opacity:0.7;margin-top:8px;"></p>
+</div>
+
+<div class="controls">
+  <button class="btn btn-outline" id="reading-listen-btn" style="padding:8px 24px;font-size:14px;">&#128264; Nghe mẫu</button>
+  <button class="mic-pill" id="reading-mic-btn" disabled>&#127908; Đọc</button>
+</div>
+
+<p id="reading-status" style="text-align:center;color:var(--text2);font-size:14px;"></p>
+
+<!-- ELSA-style result -->
+<div id="reading-result" class="hidden">
+  <p class="reading-hint">&#9654; Nhấn vào từ để xem chi tiết phát âm</p>
+  <div id="reading-result-word" class="reading-result-word"></div>
+  <div class="reading-result-card">
+    <div class="reading-result-left">
+      <span id="reading-result-emoji" class="reading-emoji"></span>
+      <div>
+        <p id="reading-result-label" class="reading-result-label"></p>
+        <p id="reading-result-desc" class="reading-result-desc"></p>
+      </div>
+    </div>
+    <div id="reading-score-circle" class="score-circle-sm"></div>
+  </div>
+  <div id="reading-words" class="reading-words-row"></div>
+  <div class="reading-actions">
+    <button class="btn btn-outline" id="reading-retry-btn">Đọc lại</button>
+    <button class="btn btn-primary" id="reading-next-btn">Tiếp theo</button>
+  </div>
+</div>
+
+<!-- Phoneme detail popup -->
+<div id="phoneme-popup" class="phoneme-popup hidden">
+  <div class="phoneme-popup-content">
+    <div class="phoneme-popup-header">
+      <span id="phoneme-popup-ipa"></span>
+      <button class="phoneme-popup-close" id="phoneme-popup-close">&times;</button>
+    </div>
+    <div class="phoneme-popup-table">
+      <div class="phoneme-row phoneme-row-header">
+        <span>Âm chuẩn</span>
+        <span>Bạn đọc</span>
+      </div>
+      <div id="phoneme-popup-rows"></div>
+    </div>
+  </div>
+</div>

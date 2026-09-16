@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IELTS Speaking - Mona AI Examiner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header id="app-header">
+  <button class="btn btn-back hidden" id="header-back-btn">&larr;</button>
+  <img src="https://mona.media/wp-content/uploads/2024/10/media-logo-new-1.png" alt="Mona Media" style="height:32px;">
+  <h1 id="header-title">IELTS Speaking</h1>
+  <span class="badge">AI Examiner</span>
+</header>
+
+<div class="container">
+  <!-- Mỗi screen load HTML từ pages/*.html -->
+  <div id="home-screen" class="screen"></div>
+  <div id="test-select-screen" class="screen hidden"></div>
+  <div id="exam-screen" class="screen hidden"></div>
+  <div id="reading-screen" class="screen hidden"></div>
+  <div id="result-detail-screen" class="screen hidden"></div>
+  <div id="result-summary-screen" class="screen hidden"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

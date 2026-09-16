@@ -1,0 +1,61 @@
+
+<h2 id="test-select-title" style="margin-bottom:20px;">Chọn đề thi</h2>
+
+<!-- For adaptive mode: topic/part selector -->
+<div id="adaptive-setup" class="hidden">
+  <div class="setup-card">
+    <div class="form-group">
+      <label>Part</label>
+      <select id="adaptive-part-select">
+        <option value="1">Part 1 - Introduction</option>
+        <option value="2">Part 2 - Long turn</option>
+        <option value="3">Part 3 - Discussion</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Chủ đề</label>
+      <select id="adaptive-topic-select">
+        <option value="Food and Daily Routine">Food & Daily Life</option>
+        <option value="Education and Learning">Education & Learning</option>
+        <option value="Science and Technology">Science & Technology</option>
+        <option value="Globalization and Culture">Globalization & Culture</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Số lượt hỏi</label>
+      <select id="adaptive-turns-select">
+        <option value="3">3 câu</option>
+        <option value="4" selected>4 câu</option>
+        <option value="5">5 câu</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="adaptive-start-btn">Bắt đầu</button>
+  </div>
+</div>
+
+<!-- For preset mode: test cards -->
+<div id="test-list"></div>
+
+<!-- For reading mode: level selector -->
+<div id="reading-setup" class="hidden">
+  <div class="setup-card">
+    <div class="form-group">
+      <label>Trình độ</label>
+      <select id="reading-level-select">
+        <option value="all">Tất cả</option>
+        <option value="4.0-5.0">Band 4.0-5.0</option>
+        <option value="5.0-6.0">Band 5.0-6.0</option>
+        <option value="6.0-7.0">Band 6.0-7.0</option>
+        <option value="7.0-8.0">Band 7.0-8.0</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Loại</label>
+      <select id="reading-type-select">
+        <option value="vocabulary">Từ vựng</option>
+        <option value="sentences">Câu</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="reading-start-btn">Bắt đầu luyện đọc</button>
+  </div>
+</div>
