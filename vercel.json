@@ -1,7 +1,4 @@
 {
-  "rewrites": [
-    { "source": "/api/azure-token", "destination": "/api/azure-token" },
-    { "source": "/api/llm", "destination": "/api/llm" },
-    { "source": "/(.*)", "destination": "/public/$1" }
-  ]
+  "framework": null,
+  "outputDirectory": "public"
 }
