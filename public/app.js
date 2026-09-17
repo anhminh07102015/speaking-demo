@@ -78,6 +78,7 @@ const SCREEN_HASH = {
   reading: "reading",
   roleplaySelect: "roleplay-select",
   roleplay: "roleplay",
+  pronProfile: "pron-profile",
   resultDetail: "result-detail",
   resultSummary: "result-summary",
 };
@@ -93,6 +94,7 @@ const PAGE_MAP = {
   reading:       { file: "pages/reading.html",        screenId: "reading-screen" },
   roleplaySelect:{ file: "pages/roleplay-select.html", screenId: "roleplay-select-screen" },
   roleplay:      { file: "pages/roleplay.html",        screenId: "roleplay-screen" },
+  pronProfile:   { file: "pages/pron-profile.html",    screenId: "pron-profile-screen" },
   resultDetail:  { file: "pages/result-detail.html",  screenId: "result-detail-screen" },
   resultSummary: { file: "pages/result-summary.html", screenId: "result-summary-screen" },
 };
@@ -122,6 +124,7 @@ async function init() {
   bindResultDetailEvents();
   bindResultSummaryEvents();
   bindRoleplayEvents();
+  bindPronProfileEvents();
 
   // Header back
   $("header-back-btn").addEventListener("click", goBack);
@@ -226,6 +229,10 @@ function bindResultSummaryEvents() {
       $("header-title").textContent = "Phòng tập luyện nói";
       showScreen("roleplaySelect");
       renderScenarioCards();
+    } else if (screenName === "pronProfile") {
+      $("header-title").textContent = "Hồ sơ phát âm";
+      showScreen("pronProfile");
+      renderPronProfile();
     } else {
       showScreen("home");
     }
@@ -278,6 +285,8 @@ function goBack() {
       goHome();
     }
   } else if (current === "roleplaySelect") {
+    goHome();
+  } else if (current === "pronProfile") {
     goHome();
   } else if (current === "resultDetail") {
     showSummaryScreen();
@@ -338,6 +347,11 @@ function selectMode(mode) {
     $("header-title").textContent = "Phòng tập luyện nói";
     showScreen("roleplaySelect");
     renderScenarioCards();
+    return;
+  } else if (mode === "pronProfile") {
+    $("header-title").textContent = "Hồ sơ phát âm";
+    showScreen("pronProfile");
+    renderPronProfile();
     return;
   }
 
@@ -511,6 +525,21 @@ async function runQuestionFlow(questionText, thinkSeconds, answerSeconds, part, 
   $("outline-content").innerHTML = `<span class="outline-loading">Đang tạo dàn ý...</span>`;
   fetchAnswerOutline(questionText, part);
 
+  // Show pronunciation warnings if user has weak phonemes
+  const weakPhonemes = getWeakPhonemes();
+  if (weakPhonemes.length) {
+    $("pron-warnings").classList.remove("hidden");
+    $("pron-warnings-content").innerHTML = weakPhonemes.map(p =>
+      `<div class="pron-warn-item">
+         <span class="pron-warn-phoneme">/${p.ipa}/</span>
+         <span class="pron-warn-rate">${p.errorRate}% sai</span>
+         <span class="pron-warn-tip">${p.misread ? `Hay đọc thành ${p.misread}` : (p.tip || "")}</span>
+       </div>`
+    ).join("");
+  } else {
+    $("pron-warnings").classList.add("hidden");
+  }
+
   let remaining = thinkSeconds;
   $("exam-timer").textContent = formatTime(remaining);
 
@@ -530,6 +559,7 @@ async function runQuestionFlow(questionText, thinkSeconds, answerSeconds, part, 
 
   $("skip-thinking-btn").classList.add("hidden");
   $("answer-outline").classList.add("hidden");
+  $("pron-warnings").classList.add("hidden");
   $("exam-phase-label").textContent = "Question";
 
   // TTS reads question
@@ -648,6 +678,9 @@ async function onStopRecording() {
     pill.disabled = false;
     return;
   }
+
+  // Track phoneme errors for pronunciation profile
+  recordPhonemeErrors(azure.words, "raw");
 
   // LLM grading
   setStatus("Đang chấm điểm...");
@@ -824,6 +857,12 @@ async function startReading() {
     return;
   }
 
+  // Adaptive: prioritize items containing user's weak phonemes
+  const weakPh = getWeakPhonemes(3, 0.25, 10);
+  if (weakPh.length) {
+    items.sort((a, b) => scoreReadingItem(b, weakPh) - scoreReadingItem(a, weakPh));
+  }
+
   state.readingItems = items;
   state.readingIndex = 0;
 
@@ -933,6 +972,7 @@ async function onReadingMic() {
     }
 
     btn.innerHTML = "&#127908; Đọc lại";
+    recordPhonemeErrors(result.words, "normalized");
     showReadingResult(result);
     return;
   }
@@ -1072,6 +1112,7 @@ async function onRpMicPress() {
     }
 
     addChatBubble("user", azure.transcript, "Bạn", azure.pron?.pronScore);
+    recordPhonemeErrors(azure.words, "raw");
 
     setRpStatus("Đang xử lý...");
     try {
@@ -1257,6 +1298,139 @@ const WORD_IPA = {
   reconceptualization: "ˌriː.kənˌsɛp.tʃu.ə.lɪˈzeɪ.ʃən",
   constitutes: "ˈkɒn.stɪ.tjuːts", genuine: "ˈdʒɛn.ju.ɪn",
 };
+
+// ============ PRONUNCIATION PROFILE (localStorage) ============
+const PRON_PROFILE_KEY = "ielts_pron_profile";
+
+function loadPronProfile() {
+  try {
+    return JSON.parse(localStorage.getItem(PRON_PROFILE_KEY))
+           || { phonemes: {}, totalSessions: 0, lastUpdated: 0 };
+  } catch { return { phonemes: {}, totalSessions: 0, lastUpdated: 0 }; }
+}
+
+function savePronProfile(profile) {
+  profile.lastUpdated = Date.now();
+  localStorage.setItem(PRON_PROFILE_KEY, JSON.stringify(profile));
+}
+
+function recordPhonemeErrors(wordsArray, format) {
+  const profile = loadPronProfile();
+  const now = Date.now();
+
+  for (const w of wordsArray) {
+    const phonemes = format === "raw"
+      ? (w.Phonemes || []).map(p => ({
+          phoneme: (p.Phoneme || "").toLowerCase(),
+          score: p.PronunciationAssessment?.AccuracyScore ?? 100
+        }))
+      : (w.phonemes || []).map(p => ({
+          phoneme: (p.phoneme || "").toLowerCase(),
+          score: p.score ?? 100
+        }));
+
+    for (const p of phonemes) {
+      if (!p.phoneme || !SAPI_TO_IPA[p.phoneme]) continue;
+      if (!profile.phonemes[p.phoneme]) {
+        profile.phonemes[p.phoneme] = { total: 0, bad: 0, lastSeen: 0 };
+      }
+      profile.phonemes[p.phoneme].total++;
+      if (p.score < 60) profile.phonemes[p.phoneme].bad++;
+      profile.phonemes[p.phoneme].lastSeen = now;
+    }
+  }
+
+  profile.totalSessions++;
+  savePronProfile(profile);
+}
+
+function getWeakPhonemes(minTotal = 3, minErrorRate = 0.3, limit = 6) {
+  const profile = loadPronProfile();
+  return Object.entries(profile.phonemes)
+    .filter(([_, v]) => v.total >= minTotal && (v.bad / v.total) >= minErrorRate)
+    .sort((a, b) => (b[1].bad / b[1].total) - (a[1].bad / a[1].total))
+    .slice(0, limit)
+    .map(([phoneme, stats]) => ({
+      phoneme,
+      ipa: SAPI_TO_IPA[phoneme] || phoneme,
+      errorRate: Math.round((stats.bad / stats.total) * 100),
+      tip: PHONEME_TIPS[phoneme] || null,
+      misread: VN_MISREAD[phoneme] || null,
+      total: stats.total,
+      bad: stats.bad,
+    }));
+}
+
+function renderPronProfile() {
+  const profile = loadPronProfile();
+  const allPhonemes = Object.entries(profile.phonemes)
+    .filter(([_, v]) => v.total >= 2)
+    .sort((a, b) => (b[1].bad / b[1].total) - (a[1].bad / a[1].total));
+
+  if (!allPhonemes.length) {
+    $("pron-profile-empty").classList.remove("hidden");
+    $("pron-profile-list").innerHTML = "";
+    $("pron-profile-summary").textContent = "";
+    return;
+  }
+
+  $("pron-profile-empty").classList.add("hidden");
+  $("pron-profile-summary").textContent =
+    `${profile.totalSessions} bài đã luyện · Cập nhật: ${new Date(profile.lastUpdated).toLocaleDateString("vi-VN")}`;
+
+  $("pron-profile-list").innerHTML = allPhonemes.map(([phoneme, stats]) => {
+    const ipa = SAPI_TO_IPA[phoneme] || phoneme;
+    const rate = Math.round((stats.bad / stats.total) * 100);
+    const barColor = rate >= 50 ? "#ef4444" : rate >= 30 ? "#f97316" : "#22c55e";
+    const tip = PHONEME_TIPS[phoneme] || "";
+    const misread = VN_MISREAD[phoneme] || "";
+
+    return `
+      <div class="pron-profile-row">
+        <div class="pron-profile-phoneme">/${ipa}/</div>
+        <div class="pron-profile-stats">
+          <div class="pron-profile-bar-bg">
+            <div class="pron-profile-bar" style="width:${rate}%;background:${barColor}"></div>
+          </div>
+          <span class="pron-profile-rate">${rate}% sai (${stats.bad}/${stats.total})</span>
+        </div>
+        ${tip ? `<div class="pron-profile-tip">${tip}</div>` : ""}
+        ${misread ? `<div class="pron-profile-misread">Hay đọc thành: ${misread}</div>` : ""}
+      </div>`;
+  }).join("");
+}
+
+function bindPronProfileEvents() {
+  $("pron-reset-btn").addEventListener("click", () => {
+    if (confirm("Xóa toàn bộ dữ liệu phát âm? Không thể hoàn tác.")) {
+      localStorage.removeItem(PRON_PROFILE_KEY);
+      renderPronProfile();
+    }
+  });
+}
+
+function wordContainsSAPIPhoneme(word, sapiPhoneme) {
+  const ipa = WORD_IPA[word.toLowerCase().replace(/[^a-z'-]/g, "")];
+  if (!ipa) return false;
+  const targetIPA = SAPI_TO_IPA[sapiPhoneme];
+  if (!targetIPA) return false;
+  return ipa.includes(targetIPA);
+}
+
+function scoreReadingItem(item, weakPhonemes) {
+  if (!weakPhonemes.length) return 0;
+  const words = item.text.toLowerCase().split(/\s+/).map(w => w.replace(/[^a-z'-]/g, ""));
+  let score = 0;
+  for (const wp of weakPhonemes) {
+    for (const word of words) {
+      if (wordContainsSAPIPhoneme(word, wp.phoneme)) {
+        score += wp.errorRate;
+        break;
+      }
+    }
+  }
+  return score;
+}
 
 const SAPI_TO_IPA = {
   "aa": "ɑː", "ae": "æ", "ah": "ʌ", "ao": "ɔː", "aw": "aʊ",

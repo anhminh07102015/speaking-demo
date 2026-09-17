@@ -1451,3 +1451,75 @@ select:focus {
   color: #b45309;
   font-style: italic;
 }
+
+/* ============ PRONUNCIATION WARNINGS (exam thinking phase) ============ */
+.pron-warnings {
+  background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+  border: 1px solid #f87171;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  animation: fadeIn 0.3s ease;
+}
+.pron-warnings-header {
+  font-weight: 600;
+  font-size: 14px;
+  color: #991b1b;
+  margin-bottom: 10px;
+}
+.pron-warnings-content { display: flex; flex-direction: column; gap: 6px; }
+.pron-warn-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: #7f1d1d;
+}
+.pron-warn-phoneme { font-weight: 700; font-size: 16px; min-width: 40px; }
+.pron-warn-rate { color: #dc2626; font-weight: 600; min-width: 55px; }
+.pron-warn-tip { color: #991b1b; flex: 1; }
+
+/* ============ PRONUNCIATION PROFILE PAGE ============ */
+.pron-profile-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.pron-profile-row:last-child { border-bottom: none; }
+.pron-profile-phoneme {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.pron-profile-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.pron-profile-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.pron-profile-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+.pron-profile-rate {
+  font-size: 13px;
+  color: var(--text2);
+  white-space: nowrap;
+}
+.pron-profile-tip {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+.pron-profile-misread {
+  font-size: 12px;
+  color: #b45309;
+  margin-top: 2px;
+}
