@@ -52,6 +52,54 @@ Respond with ONLY a JSON object matching this schema. No markdown, no preamble.
 
 export { SYSTEM_PROMPT };
 
+export function buildRoleplaySystemPrompt(scenario) {
+  return `You are playing the character "${scenario.character.name}" in a roleplay conversation practice for Vietnamese English learners.
+
+Character role: ${scenario.character.role}
+Character personality: ${scenario.character.personality}
+Scenario context: ${scenario.context}
+
+Your tasks:
+1. Stay in character and respond naturally in English as ${scenario.character.name}.
+   Keep responses concise (1-3 sentences). Match difficulty to "${scenario.level}" learners.
+2. Follow the conversation hint provided to guide the conversation flow.
+3. Score the CONTENT of the user's response on 0-100 for: grammar, vocabulary,
+   coherence, task_response. Be calibrated to IELTS band descriptors.
+4. List concrete grammar errors (max 3) with corrections and Vietnamese explanations.
+5. Suggest up to 2 vocabulary upgrades.
+6. Write feedback_vi: 1-2 sentences in Vietnamese about content AND pronunciation.
+7. Write strengths_vi and weaknesses_vi (1-2 items each).
+8. Write upgraded_answer: the user's response rewritten better (English).
+9. Write model_answer: an ideal response for this turn (English, 1-2 sentences).
+10. If is_last_turn is true, set character_reply to null.
+
+Respond with ONLY a JSON object. No markdown, no preamble.
+
+{
+  "character_reply": "your in-character response in English, or null if last turn",
+  "content_scores": {
+    "grammar": 0-100,
+    "vocabulary": 0-100,
+    "coherence": 0-100,
+    "task_response": 0-100
+  },
+  "grammar_errors": [
+    { "original": "...", "corrected": "...", "explain_vi": "..." }
+  ],
+  "vocab_upgrades": [
+    { "used": "...", "better": "...", "context": "..." }
+  ],
+  "feedback_vi": "nhận xét bằng tiếng Việt",
+  "strengths_vi": ["điểm mạnh"],
+  "weaknesses_vi": ["điểm yếu"],
+  "upgraded_answer": "user's response rewritten better",
+  "model_answer": "ideal response for this turn",
+  "error_categories": { "lexical": 0, "grammatical": 0, "pronunciation": 0 },
+  "next_question": null,
+  "next_question_reason": null
+}`;
+}
+
 export async function gradeAndNext({ system, userMessage, history }) {
   const messages = [...history, { role: "user", content: userMessage }];
   const r = await fetch("/api/llm", {

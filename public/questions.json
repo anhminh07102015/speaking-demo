@@ -484,5 +484,101 @@
         "vietnameseMeaning": "Các nhà hoạch định chính sách đối mặt với nhiệm vụ khó khăn trong việc dung hòa các mệnh lệnh của tăng trưởng kinh tế với nghĩa vụ đạo đức bảo vệ lợi ích của các thế hệ tương lai, một thách thức đòi hỏi không chỉ ý chí chính trị mà còn sự tái khái niệm hóa căn bản về những gì cấu thành tiến bộ thực sự."
       }
     ]
-  }
+  },
+  "roleplayScenarios": [
+    {
+      "id": "rp-1",
+      "titleVi": "Order trà sữa cùng đồng nghiệp",
+      "level": "beginner",
+      "levelVi": "Sơ cấp",
+      "emoji": "🧋",
+      "description": "Bạn và đồng nghiệp vào tiệm trà sữa. Hãy gọi đồ uống bằng tiếng Anh.",
+      "maxTurns": 5,
+      "character": {
+        "name": "Barista Emma",
+        "role": "Barista at a bubble tea shop",
+        "personality": "Friendly, patient, speaks clearly and slowly"
+      },
+      "openingLine": "Hi there! Welcome to Boba Bliss! What can I get for you today?",
+      "context": "The user is ordering bubble tea at a shop. The barista should ask about drink choice, size, ice level, sugar level, and toppings. Keep responses short (1-2 sentences) and natural.",
+      "conversationHints": [
+        "Ask for drink preference",
+        "Ask about size and ice/sugar level",
+        "Suggest toppings like pearls or jelly",
+        "Confirm the order and repeat it back",
+        "Give total price and say goodbye"
+      ]
+    },
+    {
+      "id": "rp-2",
+      "titleVi": "Chia sẻ về căn nhà mơ ước của bạn",
+      "level": "intermediate",
+      "levelVi": "Trung cấp",
+      "emoji": "🏡",
+      "description": "Bạn đang trò chuyện với bạn bè về ngôi nhà mơ ước của mình.",
+      "maxTurns": 6,
+      "character": {
+        "name": "Friend Alex",
+        "role": "Your close friend having coffee with you",
+        "personality": "Curious, enthusiastic, asks follow-up questions"
+      },
+      "openingLine": "Hey! I was just thinking about buying a house someday. What would your dream house look like?",
+      "context": "A casual conversation between friends about their dream houses. Alex should ask follow-up questions about location, style, rooms, garden, and what makes it special. Keep it friendly and conversational.",
+      "conversationHints": [
+        "Ask about location preference (city, countryside, beach)",
+        "Ask about house style and size",
+        "Ask about special features or favorite rooms",
+        "Share own preference and ask for comparison",
+        "Ask about when they hope to achieve it",
+        "Wrap up with encouragement"
+      ]
+    },
+    {
+      "id": "rp-3",
+      "titleVi": "Order tại Haidilao với người thương",
+      "level": "beginner",
+      "levelVi": "Sơ cấp",
+      "emoji": "🍲",
+      "description": "Bạn đang gọi món tại nhà hàng lẩu Haidilao. Hãy giao tiếp với nhân viên.",
+      "maxTurns": 5,
+      "character": {
+        "name": "Server Lily",
+        "role": "Friendly server at Haidilao restaurant",
+        "personality": "Professional, helpful, explains menu items when asked"
+      },
+      "openingLine": "Good evening! Welcome to Haidilao! Table for how many? Let me show you to your seat.",
+      "context": "The user is dining at Haidilao hotpot restaurant. The server helps with seating, explains the menu, takes soup base and ingredient orders. Keep it natural and restaurant-appropriate.",
+      "conversationHints": [
+        "Seat the customer and offer the menu",
+        "Ask about soup base preference (spicy, tomato, mushroom)",
+        "Suggest popular ingredients and ask what they'd like",
+        "Take the full order and ask about drinks",
+        "Confirm everything and wish them a great meal"
+      ]
+    },
+    {
+      "id": "rp-4",
+      "titleVi": "Đi concert của Idol",
+      "level": "intermediate",
+      "levelVi": "Trung cấp",
+      "emoji": "🎤",
+      "description": "Bạn gặp một người cùng fan tại concert. Hãy trò chuyện về idol chung.",
+      "maxTurns": 6,
+      "character": {
+        "name": "Fellow Fan Jamie",
+        "role": "A fellow fan at the concert",
+        "personality": "Excited, talkative, loves sharing opinions about music"
+      },
+      "openingLine": "Oh my god, I can't believe we're actually here! This is my third time seeing them live! Is this your first time?",
+      "context": "Two fans meeting at a concert and bonding over their shared love for the artist. Topics: favorite songs, how they became fans, concert experiences, merchandise. Keep it excited and friendly.",
+      "conversationHints": [
+        "Ask about their fan history and how they discovered the artist",
+        "Discuss favorite songs or albums",
+        "Talk about the concert atmosphere and excitement",
+        "Share concert experiences or memorable moments",
+        "Talk about merchandise or future concerts",
+        "Exchange social media or say goodbye"
+      ]
+    }
+  ]
 }

@@ -1,5 +1,5 @@
 import { initAzure, speak, assessSpeech, assessScriptedSpeech } from "./azure.js";
-import { gradeAndNext, SYSTEM_PROMPT } from "./llm.js";
+import { gradeAndNext, SYSTEM_PROMPT, buildRoleplaySystemPrompt } from "./llm.js";
 import { toBand, summarize, getPerformanceLevel, aggregateErrors } from "./scoring.js";
 
 // ============ STATE ============
@@ -25,6 +25,12 @@ const state = {
   adaptivePart: 1,
   adaptiveTopic: "",
   adaptiveMaxTurns: 4,
+  // Roleplay mode
+  roleplayScenario: null,
+  roleplayTurn: 0,
+  roleplayMaxTurns: 5,
+  roleplayMessages: [],
+  roleplayRecording: null,
 };
 
 // ============ STATE PERSISTENCE ============
@@ -32,6 +38,7 @@ const SAVE_KEYS = [
   "mode", "testSet", "currentPart", "questionIndex", "allQuestions",
   "currentQ", "turn", "maxTurns", "history", "readingItems", "readingIndex",
   "adaptivePart", "adaptiveTopic", "adaptiveMaxTurns",
+  "roleplayScenario", "roleplayTurn", "roleplayMaxTurns", "roleplayMessages",
 ];
 
 function saveState() {
@@ -69,6 +76,8 @@ const SCREEN_HASH = {
   testSelect: "test-select",
   exam: "exam",
   reading: "reading",
+  roleplaySelect: "roleplay-select",
+  roleplay: "roleplay",
   resultDetail: "result-detail",
   resultSummary: "result-summary",
 };
@@ -82,6 +91,8 @@ const PAGE_MAP = {
   testSelect:    { file: "pages/test-select.html",    screenId: "test-select-screen" },
   exam:          { file: "pages/exam.html",           screenId: "exam-screen" },
   reading:       { file: "pages/reading.html",        screenId: "reading-screen" },
+  roleplaySelect:{ file: "pages/roleplay-select.html", screenId: "roleplay-select-screen" },
+  roleplay:      { file: "pages/roleplay.html",        screenId: "roleplay-screen" },
   resultDetail:  { file: "pages/result-detail.html",  screenId: "result-detail-screen" },
   resultSummary: { file: "pages/result-summary.html", screenId: "result-summary-screen" },
 };
@@ -110,6 +121,7 @@ async function init() {
   bindReadingEvents();
   bindResultDetailEvents();
   bindResultSummaryEvents();
+  bindRoleplayEvents();
 
   // Header back
   $("header-back-btn").addEventListener("click", goBack);
@@ -202,6 +214,11 @@ function bindResultSummaryEvents() {
     } else if (screenName === "exam" && hasState && state.allQuestions.length) {
       // Exam mid-session: go back to test select (can't resume recording)
       selectMode(state.mode);
+    } else if ((screenName === "roleplay" || screenName === "roleplaySelect") && hasState && state.mode === "roleplay") {
+      // Can't resume mid-conversation, go to scenario select
+      $("header-title").textContent = "Phòng tập luyện nói";
+      showScreen("roleplaySelect");
+      renderScenarioCards();
     } else {
       showScreen("home");
     }
@@ -244,6 +261,16 @@ function goBack() {
       $("header-title").textContent = "Chọn đề";
     }
   } else if (current === "testSelect") {
+    goHome();
+  } else if (current === "roleplay") {
+    if (confirm("Bạn có chắc muốn thoát? Kết quả sẽ mất.")) {
+      if (state.roleplayRecording) {
+        state.roleplayRecording.stop().catch(() => {});
+        state.roleplayRecording = null;
+      }
+      goHome();
+    }
+  } else if (current === "roleplaySelect") {
     goHome();
   } else if (current === "resultDetail") {
     showSummaryScreen();
@@ -300,6 +327,11 @@ function selectMode(mode) {
     $("adaptive-setup").classList.add("hidden");
     $("reading-setup").classList.remove("hidden");
     $("test-list").classList.add("hidden");
+  } else if (mode === "roleplay") {
+    $("header-title").textContent = "Phòng tập luyện nói";
+    showScreen("roleplaySelect");
+    renderScenarioCards();
+    return;
   }
 
   showScreen("testSelect");
@@ -764,8 +796,38 @@ async function startReading() {
 function showReadingItem() {
   const item = state.readingItems[state.readingIndex];
   $("reading-progress").textContent = `${state.readingIndex + 1} / ${state.readingItems.length}`;
-  $("reading-text").textContent = item.text;
-  $("reading-phonetic").textContent = item.phonetic || "";
+
+  const words = item.text.split(/\s+/);
+  const isSentence = words.length > 2;
+
+  if (isSentence) {
+    // Câu dài: mỗi từ clickable để xem phiên âm
+    $("reading-text").innerHTML = words
+      .map((w) => `<span class="reading-card-word" data-word="${w.replace(/[^a-zA-Z'-]/g, '')}">${w}</span>`)
+      .join(" ");
+    $("reading-phonetic").textContent = "";
+    $("reading-text").querySelectorAll(".reading-card-word").forEach((el) => {
+      el.addEventListener("click", () => {
+        const clean = el.dataset.word.toLowerCase();
+        const ipa = WORD_IPA[clean];
+        const ipaEl = $("reading-word-ipa");
+        if (ipa) {
+          ipaEl.innerHTML = `<strong>${el.dataset.word}</strong> <span>/${ipa}/</span>`;
+        } else {
+          ipaEl.innerHTML = `<strong>${el.dataset.word}</strong>`;
+        }
+        ipaEl.classList.remove("hidden");
+        // Highlight selected word
+        $("reading-text").querySelectorAll(".reading-card-word").forEach((e) => e.classList.remove("selected"));
+        el.classList.add("selected");
+      });
+    });
+  } else {
+    $("reading-text").textContent = item.text;
+    $("reading-phonetic").textContent = item.phonetic || "";
+  }
+
+  $("reading-word-ipa").classList.add("hidden");
   $("reading-meaning").textContent = item.meaning;
   $("reading-mic-btn").disabled = false;
   $("reading-mic-btn").classList.remove("recording", "hidden");
@@ -843,7 +905,309 @@ async function onReadingMic() {
   }
 }
 
+// ============ ROLEPLAY MODE ============
+function renderScenarioCards() {
+  const grid = $("roleplay-scenario-grid");
+  const scenarios = questionsData.roleplayScenarios || [];
+  grid.innerHTML = scenarios.map(s => `
+    <div class="scenario-card" data-id="${s.id}">
+      <div class="scenario-emoji">${s.emoji}</div>
+      <div class="scenario-info">
+        <h3>${s.titleVi}</h3>
+        <p>${s.description}</p>
+        <div class="scenario-meta">
+          <span class="level-pill level-${s.level}">${s.levelVi}</span>
+          <span class="scenario-character">${s.character.name}</span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  grid.querySelectorAll(".scenario-card").forEach(card => {
+    card.addEventListener("click", () => startRoleplay(card.dataset.id));
+  });
+}
+
+async function startRoleplay(scenarioId) {
+  const scenario = questionsData.roleplayScenarios.find(s => s.id === scenarioId);
+  if (!scenario) return;
+
+  state.mode = "roleplay";
+  state.roleplayScenario = scenario;
+  state.roleplayTurn = 0;
+  state.roleplayMaxTurns = scenario.maxTurns;
+  state.roleplayMessages = [];
+  state.results = [];
+  state.history = [];
+
+  $("header-title").textContent = scenario.titleVi;
+  showScreen("roleplay");
+
+  $("rp-avatar").textContent = scenario.emoji;
+  $("rp-character-name").textContent = scenario.character.name;
+  $("rp-character-role").textContent = scenario.character.role;
+  $("rp-chat-area").innerHTML = "";
+  updateRpTurnCounter();
+
+  setRpStatus("Đang kết nối Azure Speech...");
+
+  try {
+    await initAzure();
+  } catch (e) {
+    setRpStatus("Lỗi kết nối Azure: " + e);
+    return;
+  }
+
+  // Character speaks opening line
+  addChatBubble("character", scenario.openingLine, scenario.character.name);
+  setRpStatus("Nhân vật đang nói...");
+
+  try {
+    await speak(scenario.openingLine);
+  } catch (e) {
+    console.warn("TTS error:", e);
+  }
+
+  setRpStatus("Bấm mic để trả lời");
+  $("rp-mic-btn").disabled = false;
+}
+
+function addChatBubble(role, text, name, pronScore) {
+  const chatArea = $("rp-chat-area");
+  const isUser = role === "user";
+
+  const bubble = document.createElement("div");
+  bubble.className = `rp-bubble ${isUser ? "rp-bubble-user" : "rp-bubble-character"}`;
+
+  let scoreHTML = "";
+  if (pronScore !== undefined && isUser) {
+    const cls = pronScore >= 70 ? "good" : pronScore >= 50 ? "ok" : "bad";
+    scoreHTML = `<span class="rp-pron-score ${cls}">${Math.round(pronScore)}%</span>`;
+  }
+
+  bubble.innerHTML = `
+    ${!isUser ? `<span class="rp-bubble-name">${name}</span>` : ""}
+    <p>${text}</p>
+    ${scoreHTML}
+  `;
+
+  chatArea.appendChild(bubble);
+  chatArea.scrollTop = chatArea.scrollHeight;
+
+  state.roleplayMessages.push({ role, text, name, pronScore });
+  saveState();
+}
+
+function bindRoleplayEvents() {
+  $("rp-mic-btn").addEventListener("click", onRpMicPress);
+}
+
+async function onRpMicPress() {
+  const btn = $("rp-mic-btn");
+
+  if (state.roleplayRecording) {
+    // Stop recording
+    btn.disabled = true;
+    btn.classList.remove("recording");
+    btn.innerHTML = "&#127908; Bắt đầu nói";
+    setRpStatus("Đang phân tích...");
+
+    const azure = await state.roleplayRecording.stop();
+    state.roleplayRecording = null;
+
+    if (!azure || !azure.transcript?.trim()) {
+      setRpStatus("Không nghe được gì. Bấm mic để thử lại.");
+      btn.disabled = false;
+      return;
+    }
+
+    addChatBubble("user", azure.transcript, "Bạn", azure.pron?.pronScore);
+
+    setRpStatus("Đang xử lý...");
+    try {
+      const reply = await gradeRoleplayTurn(azure);
+      state.roleplayTurn++;
+      updateRpTurnCounter();
+
+      state.results.push({
+        question: state.roleplayMessages.filter(m => m.role === "character").slice(-1)[0]?.text || "",
+        azure,
+        llm: reply,
+        band: toBand(azure, reply),
+        part: 1,
+      });
+      saveState();
+
+      if (reply.character_reply && state.roleplayTurn < state.roleplayMaxTurns) {
+        addChatBubble("character", reply.character_reply, state.roleplayScenario.character.name);
+        setRpStatus("Nhân vật đang nói...");
+        try {
+          await speak(reply.character_reply);
+        } catch (e) {
+          console.warn("TTS error:", e);
+        }
+        setRpStatus("Bấm mic để trả lời");
+        btn.disabled = false;
+      } else {
+        setRpStatus("Hội thoại hoàn thành!");
+        const closing = "That was a great conversation! Let's see how you did.";
+        addChatBubble("character", closing, state.roleplayScenario.character.name);
+        try { await speak(closing); } catch (e) {}
+
+        // Show result button
+        const chatArea = $("rp-chat-area");
+        const resultBtn = document.createElement("button");
+        resultBtn.className = "btn btn-primary";
+        resultBtn.style.cssText = "margin-top:12px;align-self:center;";
+        resultBtn.textContent = "Xem kết quả";
+        resultBtn.addEventListener("click", () => showSummaryScreen());
+        chatArea.appendChild(resultBtn);
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }
+    } catch (e) {
+      setRpStatus("Lỗi: " + e.message);
+      btn.disabled = false;
+    }
+    return;
+  }
+
+  // Start recording
+  btn.classList.add("recording");
+  btn.innerHTML = "&#9632; Dừng nói";
+  setRpStatus("Đang nghe...");
+
+  try {
+    state.roleplayRecording = await assessSpeech({});
+  } catch (e) {
+    state.roleplayRecording = null;
+    btn.classList.remove("recording");
+    btn.innerHTML = "&#127908; Bắt đầu nói";
+    btn.disabled = false;
+    setRpStatus("Lỗi: " + e.message);
+  }
+}
+
+async function gradeRoleplayTurn(azure) {
+  const scenario = state.roleplayScenario;
+  const hintIndex = Math.min(state.roleplayTurn, scenario.conversationHints.length - 1);
+  const currentHint = scenario.conversationHints[hintIndex];
+
+  const pronSummary = JSON.stringify({
+    accuracy: Math.round(azure.pron.accuracy),
+    fluency: Math.round(azure.pron.fluency),
+    prosody: Math.round(azure.pron.prosody),
+    pronScore: Math.round(azure.pron.pronScore),
+    wordsPerMinute: Math.round(azure.wordsPerMinute),
+    problemWords: azure.problemWords?.slice(0, 10),
+  });
+
+  const userMessage = `MODE: roleplay
+Turn ${state.roleplayTurn + 1} of ${state.roleplayMaxTurns}
+Current conversation hint: "${currentHint}"
+Is last turn: ${state.roleplayTurn + 1 >= state.roleplayMaxTurns}
+
+Conversation so far:
+${state.roleplayMessages.map(m => `[${m.role === "user" ? "User" : scenario.character.name}]: ${m.text}`).join("\n")}
+
+User's latest response (transcript): "${azure.transcript}"
+Pronunciation summary: ${pronSummary}`;
+
+  const systemPrompt = buildRoleplaySystemPrompt(scenario);
+
+  return await gradeAndNext({
+    system: systemPrompt,
+    userMessage,
+    history: state.history,
+  });
+}
+
+function setRpStatus(text) {
+  $("rp-status").textContent = text;
+}
+
+function updateRpTurnCounter() {
+  $("rp-turn-counter").textContent = `Lượt ${state.roleplayTurn + 1}/${state.roleplayMaxTurns}`;
+}
+
 // SAPI → IPA conversion (Azure returns SAPI format)
+// IPA cho các từ trong bài đọc
+const WORD_IPA = {
+  // Common words
+  i: "aɪ", a: "ə", the: "ðə", is: "ɪz", it: "ɪt", my: "maɪ", to: "tuː",
+  and: "ænd", of: "ɒv", in: "ɪn", for: "fɔːr", that: "ðæt", are: "ɑːr",
+  have: "hæv", has: "hæz", with: "wɪð", they: "ðeɪ", their: "ðɛər",
+  our: "aʊər", yet: "jɛt", also: "ˈɔːl.soʊ", more: "mɔːr", not: "nɒt",
+  only: "ˈoʊn.li", but: "bʌt", who: "huː", what: "wɒt", about: "əˈbaʊt",
+  been: "biːn", by: "baɪ", at: "æt", or: "ɔːr", an: "ən", its: "ɪts",
+  before: "bɪˈfɔːr", go: "ɡoʊ", near: "nɪər",
+  // s1 - Daily Life
+  usually: "ˈjuː.ʒu.ə.li", wake: "weɪk", up: "ʌp", seven: "ˈsɛv.ən",
+  "o'clock": "əˈklɒk", breakfast: "ˈbrɛk.fəst", family: "ˈfæm.ə.li", work: "wɜːrk",
+  // s2 - Hometown
+  hometown: "ˈhoʊm.taʊn", small: "smɔːl", city: "ˈsɪt.i", coast: "koʊst",
+  famous: "ˈfeɪ.məs", fresh: "frɛʃ", seafood: "ˈsiː.fuːd",
+  // s3 - Education
+  believe: "bɪˈliːv", education: "ˌɛdʒ.uˈkeɪ.ʃən", plays: "pleɪz",
+  crucial: "ˈkruː.ʃəl", role: "roʊl", helping: "ˈhɛlp.ɪŋ", young: "jʌŋ",
+  people: "ˈpiː.pəl", develop: "dɪˈvɛl.əp", skills: "skɪlz",
+  need: "niːd", succeed: "səkˈsiːd", modern: "ˈmɒd.ərn", workplace: "ˈwɜːrk.pleɪs",
+  // s4 - Travel
+  travelling: "ˈtræv.əl.ɪŋ", different: "ˈdɪf.ər.ənt", countries: "ˈkʌn.triz",
+  allows: "əˈlaʊz", broaden: "ˈbrɔː.dən", horizons: "həˈraɪ.zənz",
+  gain: "ɡeɪn", deeper: "ˈdiː.pər", understanding: "ˌʌn.dərˈstæn.dɪŋ",
+  other: "ˈʌð.ər", cultures: "ˈkʌl.tʃərz",
+  // s5 - Health
+  maintaining: "meɪnˈteɪ.nɪŋ", balanced: "ˈbæl.ənst", diet: "ˈdaɪ.ət",
+  exercising: "ˈɛk.sər.saɪ.zɪŋ", regularly: "ˈrɛɡ.jə.lər.li",
+  considered: "kənˈsɪd.ərd", essential: "ɪˈsɛn.ʃəl", leading: "ˈliː.dɪŋ",
+  healthy: "ˈhɛl.θi", lifestyle: "ˈlaɪf.staɪl",
+  // s6 - Technology
+  while: "waɪl", technological: "ˌtɛk.nəˈlɒdʒ.ɪ.kəl",
+  advancements: "ədˈvæns.mənts", undeniably: "ˌʌn.dɪˈnaɪ.ə.bli",
+  improved: "ɪmˈpruːvd", standard: "ˈstæn.dərd", living: "ˈlɪv.ɪŋ",
+  given: "ˈɡɪv.ən", rise: "raɪz", concerns: "kənˈsɜːrnz",
+  data: "ˈdeɪ.tə", privacy: "ˈpraɪ.və.si", displacement: "dɪsˈpleɪs.mənt",
+  traditional: "trəˈdɪʃ.ən.əl", jobs: "dʒɒbz",
+  // s7 - Environment
+  governments: "ˈɡʌv.ərn.mənts", around: "əˈraʊnd", world: "wɜːrld",
+  under: "ˈʌn.dər", increasing: "ɪnˈkriː.sɪŋ", pressure: "ˈprɛʃ.ər",
+  implement: "ˈɪm.plɪ.mɛnt", policies: "ˈpɒl.ə.siz",
+  address: "əˈdrɛs", climate: "ˈklaɪ.mət", change: "tʃeɪndʒ",
+  progress: "ˈprɒɡ.rɛs", remains: "rɪˈmeɪnz", slow: "sloʊ",
+  due: "djuː", competing: "kəmˈpiː.tɪŋ", economic: "ˌiː.kəˈnɒm.ɪk",
+  interests: "ˈɪn.trɛsts",
+  // s8 - Globalization
+  inexorable: "ɪnˈɛk.sər.ə.bəl", march: "mɑːrtʃ",
+  globalization: "ˌɡloʊ.bəl.aɪˈzeɪ.ʃən", engendered: "ɪnˈdʒɛn.dərd",
+  paradox: "ˈpær.ə.dɒks", whereby: "wɛərˈbaɪ",
+  simultaneously: "ˌsaɪ.məlˈteɪ.ni.əs.li", becoming: "bɪˈkʌm.ɪŋ",
+  interconnected: "ˌɪn.tər.kəˈnɛk.tɪd", fiercely: "ˈfɪrs.li",
+  protective: "prəˈtɛk.tɪv", distinctive: "dɪˈstɪŋk.tɪv",
+  identities: "aɪˈdɛn.tɪ.tiz",
+  // s9 - Philosophy
+  notion: "ˈnoʊ.ʃən", material: "məˈtɪər.i.əl", prosperity: "prɒˈspɛr.ɪ.ti",
+  alone: "əˈloʊn", can: "kæn", guarantee: "ˌɡær.ənˈtiː",
+  societal: "səˈsaɪ.ə.təl", "well-being": "ˈwɛl.biː.ɪŋ",
+  increasingly: "ɪnˈkriː.sɪŋ.li", called: "kɔːld", into: "ˈɪn.tuː",
+  question: "ˈkwɛs.tʃən", researchers: "rɪˈsɜːr.tʃərz",
+  advocate: "ˈæd.və.keɪt", holistic: "hoʊˈlɪs.tɪk",
+  measure: "ˈmɛʒ.ər", encompasses: "ɪnˈkʌm.pəs.ɪz",
+  mental: "ˈmɛn.təl", health: "hɛlθ", social: "ˈsoʊ.ʃəl",
+  cohesion: "koʊˈhiː.ʒən", environmental: "ɪnˌvaɪ.rənˈmɛn.təl",
+  stewardship: "ˈstjuː.ərd.ʃɪp",
+  // s10 - Policy and Ethics
+  policymakers: "ˈpɒl.ə.si.meɪ.kərz", face: "feɪs",
+  unenviable: "ʌnˈɛn.vi.ə.bəl", task: "tæsk",
+  reconciling: "ˈrɛk.ən.saɪ.lɪŋ", imperatives: "ɪmˈpɛr.ə.tɪvz",
+  growth: "ɡroʊθ", moral: "ˈmɒr.əl", obligation: "ˌɒb.lɪˈɡeɪ.ʃən",
+  safeguard: "ˈseɪf.ɡɑːrd", future: "ˈfjuː.tʃər",
+  generations: "ˌdʒɛn.əˈreɪ.ʃənz", challenge: "ˈtʃæl.ɪndʒ",
+  demands: "dɪˈmændz", political: "pəˈlɪt.ɪ.kəl", will: "wɪl",
+  fundamental: "ˌfʌn.dəˈmɛn.təl",
+  reconceptualization: "ˌriː.kənˌsɛp.tʃu.ə.lɪˈzeɪ.ʃən",
+  constitutes: "ˈkɒn.stɪ.tjuːts", genuine: "ˈdʒɛn.ju.ɪn",
+};
+
 const SAPI_TO_IPA = {
   "aa": "ɑː", "ae": "æ", "ah": "ʌ", "ao": "ɔː", "aw": "aʊ",
   "ax": "ə", "ay": "aɪ", "b": "b", "ch": "tʃ", "d": "d",
@@ -915,7 +1279,7 @@ const VN_MISREAD = {
 };
 
 function getPhonemeClass(score) {
-  return score >= 80 ? "good" : "bad";
+  return score >= 60 ? "good" : "bad";
 }
 
 // Tính điểm thực tế cho word dựa trên phoneme scores
@@ -952,7 +1316,7 @@ function coloredWordHTML(word, phonemes) {
 
   for (let pi = 0; pi < phonemes.length; pi++) {
     const p = phonemes[pi];
-    const color = p.score >= 80 ? "#16a34a" : "#dc2626";
+    const color = p.score >= 60 ? "#16a34a" : "#dc2626";
     const key = p.phoneme.toLowerCase();
     const candidates = PHONEME_LETTERS[key] || [];
 
@@ -979,7 +1343,7 @@ function coloredWordHTML(word, phonemes) {
   // Remaining chars → last phoneme color
   if (ci < word.length) {
     const last = phonemes[phonemes.length - 1];
-    const color = last.score >= 80 ? "#16a34a" : "#dc2626";
+    const color = last.score >= 60 ? "#16a34a" : "#dc2626";
     html += `<span style="color:${color}">${word.substring(ci)}</span>`;
   }
 
@@ -1026,8 +1390,8 @@ function showReadingResult(result) {
   circle.className = `score-circle-sm ${cls}`;
 
   // Emoji + label
-  const emoji = realScore >= 80 ? "😍" : "😯";
-  const label = realScore >= 80 ? "Tuyệt vời!" : "Cần luyện thêm";
+  const emoji = realScore >= 80 ? "😍" : realScore >= 60 ? "😊" : "😯";
+  const label = realScore >= 80 ? "Tuyệt vời!" : realScore >= 60 ? "Khá tốt" : "Cần luyện thêm";
   const desc = `Phát âm ${realScore}% giống người bản xứ`;
 
   $("reading-result-emoji").textContent = emoji;
@@ -1063,10 +1427,10 @@ function showPhonemePopup(words, ipa) {
     .map((p) => {
       const ipa = toIPA(p.phoneme);
       const tipKey = p.phoneme.toLowerCase();
-      const tip = p.score < 80 && PHONEME_TIPS[tipKey] ? PHONEME_TIPS[tipKey] : null;
-      const misread = p.score < 80 && VN_MISREAD[tipKey] ? VN_MISREAD[tipKey] : null;
+      const tip = p.score < 60 && PHONEME_TIPS[tipKey] ? PHONEME_TIPS[tipKey] : null;
+      const misread = p.score < 60 && VN_MISREAD[tipKey] ? VN_MISREAD[tipKey] : null;
 
-      if (p.score >= 80) {
+      if (p.score >= 60) {
         return `
           <div class="phoneme-row">
             <span class="phoneme-sound">/${ipa}/</span>

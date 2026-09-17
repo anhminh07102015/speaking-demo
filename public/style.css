@@ -525,6 +525,35 @@ select:focus {
 .reading-word-clickable { cursor: pointer; transition: opacity 0.15s; }
 .reading-word-clickable:hover { opacity: 0.7; }
 
+/* Clickable words on reading card (before recording) */
+.reading-card-word {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.reading-card-word:hover { background: rgba(255,255,255,0.3); }
+.reading-card-word.selected { background: rgba(255,255,255,0.4); text-decoration: underline; }
+
+.reading-word-ipa {
+  text-align: center;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 16px;
+  color: var(--text);
+  animation: fadeIn 0.2s;
+}
+.reading-word-ipa strong { margin-right: 8px; color: var(--primary); }
+.reading-word-ipa span { color: var(--text2); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .reading-result-card {
   display: flex;
   align-items: center;
@@ -1243,4 +1272,138 @@ select:focus {
     font-size: 13px;
   }
 
+  .scenario-grid { grid-template-columns: 1fr; }
+  .rp-bubble { max-width: 85%; }
+  .rp-chat-area { max-height: 400px; }
 }
+
+/* ============ ROLEPLAY: SCENARIO GRID ============ */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.scenario-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  cursor: pointer;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.scenario-card:hover {
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
+}
+
+.scenario-emoji {
+  font-size: 36px;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(37, 99, 235, 0.06);
+  border-radius: 14px;
+}
+
+.scenario-info h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.scenario-info p { font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+.scenario-meta { display: flex; align-items: center; gap: 8px; }
+
+.level-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  color: #fff;
+}
+.level-beginner { background: #16a34a; }
+.level-intermediate { background: #f59e0b; }
+
+.scenario-character { font-size: 12px; color: var(--text2); font-weight: 500; }
+
+/* ============ ROLEPLAY: CHAT UI ============ */
+.rp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+}
+.rp-character-info { display: flex; align-items: center; gap: 12px; }
+
+.rp-avatar {
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(37, 99, 235, 0.06);
+  border-radius: 50%;
+}
+
+.rp-chat-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  min-height: 300px;
+  max-height: 500px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rp-bubble {
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  animation: fadeIn 0.3s ease;
+}
+.rp-bubble-character {
+  align-self: flex-start;
+  background: #f0f2f5;
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+.rp-bubble-user {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.rp-bubble-name {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.rp-pron-score {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-top: 6px;
+}
+.rp-pron-score.good { background: rgba(22,163,74,0.2); color: #16a34a; }
+.rp-pron-score.ok { background: rgba(245,158,11,0.2); color: #b45309; }
+.rp-pron-score.bad { background: rgba(220,38,38,0.2); color: #dc2626; }
