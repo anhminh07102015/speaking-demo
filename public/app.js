@@ -558,7 +558,6 @@ async function runQuestionFlow(questionText, thinkSeconds, answerSeconds, part, 
   state.thinkingResolve = null;
 
   $("skip-thinking-btn").classList.add("hidden");
-  $("answer-outline").classList.add("hidden");
   $("pron-warnings").classList.add("hidden");
   $("exam-phase-label").textContent = "Question";
 
@@ -588,9 +587,10 @@ Given an IELTS Part ${part} question, generate a brief answer outline (dàn ý) 
 Rules:
 - Return 3-5 bullet points in Vietnamese
 - Each point should be a short phrase or sentence guiding what to say
-- For Part 1: simple direct points
-- For Part 2: follow the cue card structure (describe, explain, elaborate)
-- For Part 3: suggest argument structure (viewpoint, reason, example)
+- Include English vocabulary hints in parentheses for key phrases, e.g. "Ăn ở đâu (at home / eating out)", "Lý do thích (convenient, affordable, relaxing)"
+- For Part 1: simple direct points with useful vocab
+- For Part 2: follow the cue card structure (describe, explain, elaborate) with vocab
+- For Part 3: suggest argument structure (viewpoint, reason, example) with vocab
 - Keep it concise — this is a quick reference, not a full answer
 
 Respond with ONLY a JSON object: {"outline": ["point 1", "point 2", ...]}`;
