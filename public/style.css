@@ -1407,3 +1407,47 @@ select:focus {
 .rp-pron-score.good { background: rgba(22,163,74,0.2); color: #16a34a; }
 .rp-pron-score.ok { background: rgba(245,158,11,0.2); color: #b45309; }
 .rp-pron-score.bad { background: rgba(220,38,38,0.2); color: #dc2626; }
+
+/* ============ ANSWER OUTLINE ============ */
+.answer-outline {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fbbf24;
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  animation: fadeIn 0.3s ease;
+}
+.outline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #92400e;
+}
+.outline-toggle {
+  background: none;
+  border: 1px solid #d97706;
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 12px;
+  color: #92400e;
+  cursor: pointer;
+}
+.outline-content {
+  font-size: 14px;
+  color: #78350f;
+  line-height: 1.8;
+}
+.outline-content ol {
+  padding-left: 20px;
+  margin: 0;
+}
+.outline-content li {
+  margin-bottom: 4px;
+}
+.outline-content .outline-loading {
+  color: #b45309;
+  font-style: italic;
+}

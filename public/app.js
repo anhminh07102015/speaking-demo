@@ -142,6 +142,13 @@ function bindExamEvents() {
   $("mic-pill").addEventListener("click", onMicPress);
   $("replay-btn").addEventListener("click", () => speak(state.currentQ));
   $("skip-thinking-btn").addEventListener("click", skipThinking);
+  $("outline-toggle-btn").addEventListener("click", () => {
+    const content = $("outline-content");
+    const btn = $("outline-toggle-btn");
+    const hidden = content.style.display === "none";
+    content.style.display = hidden ? "" : "none";
+    btn.textContent = hidden ? "Ẩn" : "Hiện";
+  });
 }
 
 function bindReadingEvents() {
@@ -499,6 +506,11 @@ async function runQuestionFlow(questionText, thinkSeconds, answerSeconds, part, 
 
   state.answerTimeLimit = answerSeconds;
 
+  // Show outline area with loading state, fetch in parallel
+  $("answer-outline").classList.remove("hidden");
+  $("outline-content").innerHTML = `<span class="outline-loading">Đang tạo dàn ý...</span>`;
+  fetchAnswerOutline(questionText, part);
+
   let remaining = thinkSeconds;
   $("exam-timer").textContent = formatTime(remaining);
 
@@ -517,6 +529,7 @@ async function runQuestionFlow(questionText, thinkSeconds, answerSeconds, part, 
   state.thinkingResolve = null;
 
   $("skip-thinking-btn").classList.add("hidden");
+  $("answer-outline").classList.add("hidden");
   $("exam-phase-label").textContent = "Question";
 
   // TTS reads question
@@ -536,6 +549,43 @@ async function runQuestionFlow(questionText, thinkSeconds, answerSeconds, part, 
 function skipThinking() {
   clearTimers();
   if (state.thinkingResolve) state.thinkingResolve();
+}
+
+async function fetchAnswerOutline(question, part) {
+  const system = `You are an IELTS Speaking coach for Vietnamese learners.
+Given an IELTS Part ${part} question, generate a brief answer outline (dàn ý) in Vietnamese that helps the learner structure their response.
+
+Rules:
+- Return 3-5 bullet points in Vietnamese
+- Each point should be a short phrase or sentence guiding what to say
+- For Part 1: simple direct points
+- For Part 2: follow the cue card structure (describe, explain, elaborate)
+- For Part 3: suggest argument structure (viewpoint, reason, example)
+- Keep it concise — this is a quick reference, not a full answer
+
+Respond with ONLY a JSON object: {"outline": ["point 1", "point 2", ...]}`;
+
+  try {
+    const r = await fetch("/api/llm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system,
+        messages: [{ role: "user", content: `Question: "${question}"` }],
+      }),
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    let text = data.text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    const json = JSON.parse(text);
+    const points = json.outline || [];
+
+    $("outline-content").innerHTML = `<ol>${points.map((p) => `<li>${p}</li>`).join("")}</ol>`;
+  } catch (e) {
+    console.error("Outline error:", e);
+    $("outline-content").innerHTML = `<span style="color:var(--text2)">Không tải được dàn ý</span>`;
+  }
 }
 
 function formatTime(s) {
