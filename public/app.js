@@ -79,6 +79,7 @@ const SCREEN_HASH = {
   roleplaySelect: "roleplay-select",
   roleplay: "roleplay",
   pronProfile: "pron-profile",
+  srsReview: "srs-review",
   resultDetail: "result-detail",
   resultSummary: "result-summary",
 };
@@ -95,6 +96,7 @@ const PAGE_MAP = {
   roleplaySelect:{ file: "pages/roleplay-select.html", screenId: "roleplay-select-screen" },
   roleplay:      { file: "pages/roleplay.html",        screenId: "roleplay-screen" },
   pronProfile:   { file: "pages/pron-profile.html",    screenId: "pron-profile-screen" },
+  srsReview:     { file: "pages/srs-review.html",     screenId: "srs-review-screen" },
   resultDetail:  { file: "pages/result-detail.html",  screenId: "result-detail-screen" },
   resultSummary: { file: "pages/result-summary.html", screenId: "result-summary-screen" },
 };
@@ -125,6 +127,7 @@ async function init() {
   bindResultSummaryEvents();
   bindRoleplayEvents();
   bindPronProfileEvents();
+  bindSRSEvents();
 
   // Header back
   $("header-back-btn").addEventListener("click", goBack);
@@ -233,6 +236,10 @@ function bindResultSummaryEvents() {
       $("header-title").textContent = "Hồ sơ phát âm";
       showScreen("pronProfile");
       renderPronProfile();
+    } else if (screenName === "srsReview") {
+      $("header-title").textContent = "Ôn từ sai";
+      showScreen("srsReview");
+      startSRSReview();
     } else {
       showScreen("home");
     }
@@ -257,6 +264,7 @@ function showScreen(name) {
   if (name === "home") {
     backBtn.classList.add("hidden");
     $("header-title").textContent = "IELTS Speaking";
+    updateSRSDueBadge();
   } else {
     backBtn.classList.remove("hidden");
   }
@@ -288,6 +296,14 @@ function goBack() {
     goHome();
   } else if (current === "pronProfile") {
     goHome();
+  } else if (current === "srsReview") {
+    if (srsState.recording) {
+      srsState.recording.stop().catch(() => {});
+      srsState.recording = null;
+    }
+    $("header-title").textContent = "Hồ sơ phát âm";
+    showScreen("pronProfile");
+    renderPronProfile();
   } else if (current === "resultDetail") {
     showSummaryScreen();
   } else if (current === "resultSummary") {
@@ -347,6 +363,11 @@ function selectMode(mode) {
     $("header-title").textContent = "Phòng tập luyện nói";
     showScreen("roleplaySelect");
     renderScenarioCards();
+    return;
+  } else if (mode === "srsReview") {
+    $("header-title").textContent = "Ôn từ sai";
+    showScreen("srsReview");
+    startSRSReview();
     return;
   } else if (mode === "pronProfile") {
     $("header-title").textContent = "Hồ sơ phát âm";
@@ -679,8 +700,9 @@ async function onStopRecording() {
     return;
   }
 
-  // Track phoneme errors for pronunciation profile
+  // Track phoneme errors + SRS
   recordPhonemeErrors(azure.words, "raw");
+  addToSRS(azure.words, "raw");
 
   // LLM grading
   setStatus("Đang chấm điểm...");
@@ -718,9 +740,10 @@ async function onStopRecording() {
     }
 
     if (nextQ) {
-      // Short feedback TTS
+      // Natural examiner reaction before next question
       try {
-        await speak("OK, let's move on to the next question.");
+        const reaction = llm.examiner_reaction || "OK, let's move on to the next question.";
+        await speak(reaction);
       } catch {}
 
       if (state.mode === "preset") {
@@ -793,12 +816,20 @@ Pronunciation summary: ${pronSummary}`;
 Exam part: ${state.adaptivePart}   Topic: "${state.adaptiveTopic}"   Turn ${state.turn + 1} of ${state.maxTurns}
 ${convoSoFar ? "Conversation so far:\n" + convoSoFar + "\n" : ""}
 Rules for next_question:
-- If the answer is short (< 25 words) or vague: ask a follow-up that digs into what they said.
-- If the answer is developed: move to a related but harder angle.
-- If off-topic: gently steer back.
-- Pick up a concrete detail the learner mentioned.
-- Never repeat a previous question. Keep it one sentence.
+- ALWAYS reference something specific the learner said. E.g., if they mention "cooking", ask about a specific dish or cooking experience.
+- If the answer is short (< 25 words) or vague: ask a follow-up that digs deeper. Use "You mentioned X, can you tell me more about that?"
+- If the answer is well-developed: move to a related but more abstract/challenging angle. E.g., personal experience → opinion → comparison → hypothetical.
+- Follow natural IELTS Part progression:
+  Part 1: personal/factual → preference → frequency → reason
+  Part 3: opinion → reason → example → comparison → hypothetical future
+- Never repeat or closely rephrase a previous question. Keep it one sentence.
+- Make the follow-up feel like a natural conversation, not an interrogation.
 - If turn == max, set next_question to null.
+
+Rules for examiner_reaction:
+- Write a brief, natural 1-sentence reaction BEFORE the next question.
+- Reference something the learner said. E.g., "That's interesting" or "I see, so you prefer..."
+- Keep it warm and encouraging, like a real IELTS examiner.
 
 Current question: "${state.currentQ}"
 Learner answer (transcript): "${azure.transcript}"
@@ -973,6 +1004,7 @@ async function onReadingMic() {
 
     btn.innerHTML = "&#127908; Đọc lại";
     recordPhonemeErrors(result.words, "normalized");
+    addToSRS(result.words, "normalized");
     showReadingResult(result);
     return;
   }
@@ -1113,6 +1145,7 @@ async function onRpMicPress() {
 
     addChatBubble("user", azure.transcript, "Bạn", azure.pron?.pronScore);
     recordPhonemeErrors(azure.words, "raw");
+    addToSRS(azure.words, "raw");
 
     setRpStatus("Đang xử lý...");
     try {
@@ -1371,32 +1404,80 @@ function renderPronProfile() {
     $("pron-profile-empty").classList.remove("hidden");
     $("pron-profile-list").innerHTML = "";
     $("pron-profile-summary").textContent = "";
+  } else {
+    $("pron-profile-empty").classList.add("hidden");
+    $("pron-profile-summary").textContent =
+      `${profile.totalSessions} bài đã luyện · Cập nhật: ${new Date(profile.lastUpdated).toLocaleDateString("vi-VN")}`;
+
+    $("pron-profile-list").innerHTML = allPhonemes.map(([phoneme, stats]) => {
+      const ipa = SAPI_TO_IPA[phoneme] || phoneme;
+      const rate = Math.round((stats.bad / stats.total) * 100);
+      const barColor = rate >= 50 ? "#ef4444" : rate >= 30 ? "#f97316" : "#22c55e";
+      const tip = PHONEME_TIPS[phoneme] || "";
+      const misread = VN_MISREAD[phoneme] || "";
+
+      return `
+        <div class="pron-profile-row">
+          <div class="pron-profile-phoneme">/${ipa}/</div>
+          <div class="pron-profile-stats">
+            <div class="pron-profile-bar-bg">
+              <div class="pron-profile-bar" style="width:${rate}%;background:${barColor}"></div>
+            </div>
+            <span class="pron-profile-rate">${rate}% sai (${stats.bad}/${stats.total})</span>
+          </div>
+          ${tip ? `<div class="pron-profile-tip">${tip}</div>` : ""}
+          ${misread ? `<div class="pron-profile-misread">Hay đọc thành: ${misread}</div>` : ""}
+        </div>`;
+    }).join("");
+  }
+
+  // Render SRS word list
+  renderSRSWordList();
+}
+
+function renderSRSWordList() {
+  const srs = loadSRS();
+  const allWords = Object.values(srs.words).sort((a, b) => a.nextReview - b.nextReview);
+  const now = Date.now();
+  const dueCount = allWords.filter(w => w.nextReview <= now).length;
+
+  const badge = $("srs-due-badge");
+  if (badge) {
+    badge.textContent = dueCount > 0 ? `${dueCount} từ cần ôn` : `${allWords.length} từ`;
+    badge.style.background = dueCount > 0 ? "#8b5cf6" : "#9ca3af";
+  }
+
+  const startBtn = $("srs-start-btn");
+  if (startBtn) {
+    startBtn.textContent = dueCount > 0 ? `🔄 Ôn ${dueCount} từ ngay` : "🔄 Bắt đầu ôn tập";
+    startBtn.disabled = dueCount === 0;
+    startBtn.style.opacity = dueCount === 0 ? "0.5" : "1";
+  }
+
+  if (!allWords.length) {
+    $("srs-list-empty").classList.remove("hidden");
+    $("srs-word-list").innerHTML = "";
     return;
   }
 
-  $("pron-profile-empty").classList.add("hidden");
-  $("pron-profile-summary").textContent =
-    `${profile.totalSessions} bài đã luyện · Cập nhật: ${new Date(profile.lastUpdated).toLocaleDateString("vi-VN")}`;
+  $("srs-list-empty").classList.add("hidden");
+  $("srs-word-list").innerHTML = allWords.slice(0, 20).map(w => {
+    const isDue = w.nextReview <= now;
+    const ipa = w.phonetic || (WORD_IPA[w.word] ? `/${WORD_IPA[w.word]}/` : "");
+    const badIPA = w.badPhonemes.filter(p => SAPI_TO_IPA[p]).map(p => `/${SAPI_TO_IPA[p]}/`).slice(0, 3).join(" ");
+    const statusText = isDue
+      ? "Cần ôn ngay"
+      : `Ôn lại ${new Date(w.nextReview).toLocaleDateString("vi-VN")}`;
+    const statusCls = isDue ? "srs-due" : "srs-scheduled";
 
-  $("pron-profile-list").innerHTML = allPhonemes.map(([phoneme, stats]) => {
-    const ipa = SAPI_TO_IPA[phoneme] || phoneme;
-    const rate = Math.round((stats.bad / stats.total) * 100);
-    const barColor = rate >= 50 ? "#ef4444" : rate >= 30 ? "#f97316" : "#22c55e";
-    const tip = PHONEME_TIPS[phoneme] || "";
-    const misread = VN_MISREAD[phoneme] || "";
-
-    return `
-      <div class="pron-profile-row">
-        <div class="pron-profile-phoneme">/${ipa}/</div>
-        <div class="pron-profile-stats">
-          <div class="pron-profile-bar-bg">
-            <div class="pron-profile-bar" style="width:${rate}%;background:${barColor}"></div>
-          </div>
-          <span class="pron-profile-rate">${rate}% sai (${stats.bad}/${stats.total})</span>
-        </div>
-        ${tip ? `<div class="pron-profile-tip">${tip}</div>` : ""}
-        ${misread ? `<div class="pron-profile-misread">Hay đọc thành: ${misread}</div>` : ""}
-      </div>`;
+    return `<div class="srs-list-item">
+      <div class="srs-list-word">${w.word} <span class="srs-list-ipa">${ipa}</span></div>
+      <div class="srs-list-meta">
+        <span class="srs-list-bad">${badIPA}</span>
+        <span class="srs-list-status ${statusCls}">${statusText}</span>
+        ${w.streak > 0 ? `<span class="srs-list-streak">🔥${w.streak}</span>` : ""}
+      </div>
+    </div>`;
   }).join("");
 }
 
@@ -1404,9 +1485,323 @@ function bindPronProfileEvents() {
   $("pron-reset-btn").addEventListener("click", () => {
     if (confirm("Xóa toàn bộ dữ liệu phát âm? Không thể hoàn tác.")) {
       localStorage.removeItem(PRON_PROFILE_KEY);
+      localStorage.removeItem(SRS_KEY);
       renderPronProfile();
     }
   });
+  $("srs-start-btn").addEventListener("click", () => {
+    const due = getDueWords();
+    if (!due.length) return;
+    $("header-title").textContent = "Ôn từ sai";
+    showScreen("srsReview");
+    startSRSReview();
+  });
+}
+
+// ============ SPACED REPETITION SYSTEM (localStorage) ============
+const SRS_KEY = "ielts_srs_words";
+
+function loadSRS() {
+  try {
+    return JSON.parse(localStorage.getItem(SRS_KEY)) || { words: {}, totalReviews: 0 };
+  } catch { return { words: {}, totalReviews: 0 }; }
+}
+
+function saveSRS(srs) {
+  localStorage.setItem(SRS_KEY, JSON.stringify(srs));
+}
+
+function addToSRS(wordsArray, format) {
+  const srs = loadSRS();
+  const now = Date.now();
+
+  for (const w of wordsArray) {
+    const wordText = format === "raw" ? (w.Word || "") : (w.word || "");
+    const clean = wordText.toLowerCase().replace(/[^a-z'-]/g, "");
+    if (!clean || clean.length < 2) continue;
+
+    const wordScore = format === "raw"
+      ? (w.PronunciationAssessment?.AccuracyScore ?? 100)
+      : (w.score ?? 100);
+
+    const phonemes = format === "raw"
+      ? (w.Phonemes || []).map(p => ({ phoneme: (p.Phoneme || "").toLowerCase(), score: p.PronunciationAssessment?.AccuracyScore ?? 100 }))
+      : (w.phonemes || []).map(p => ({ phoneme: (p.phoneme || "").toLowerCase(), score: p.score ?? 100 }));
+
+    const badPhonemes = phonemes.filter(p => p.score < 60).map(p => p.phoneme);
+
+    // Add to SRS if word score < 60 OR >= 2 bad phonemes
+    if (wordScore >= 60 && badPhonemes.length < 2) continue;
+
+    const ipa = WORD_IPA[clean] || null;
+    const existing = srs.words[clean];
+
+    if (existing) {
+      // Update score and bad phonemes, keep interval
+      existing.score = Math.round(wordScore);
+      existing.badPhonemes = [...new Set([...existing.badPhonemes, ...badPhonemes])];
+      if (ipa && !existing.phonetic) existing.phonetic = ipa;
+    } else {
+      srs.words[clean] = {
+        word: clean,
+        phonetic: ipa ? `/${ipa}/` : null,
+        badPhonemes,
+        score: Math.round(wordScore),
+        addedAt: now,
+        lastReview: 0,
+        nextReview: now, // due immediately
+        interval: 1,
+        streak: 0,
+      };
+    }
+  }
+
+  saveSRS(srs);
+}
+
+function getDueWords() {
+  const srs = loadSRS();
+  const now = Date.now();
+  return Object.values(srs.words)
+    .filter(w => w.nextReview <= now)
+    .sort((a, b) => a.nextReview - b.nextReview);
+}
+
+function updateSRSWord(wordKey, score) {
+  const srs = loadSRS();
+  const w = srs.words[wordKey];
+  if (!w) return;
+
+  const now = Date.now();
+  w.score = Math.round(score);
+  w.lastReview = now;
+  srs.totalReviews++;
+
+  if (score >= 60) {
+    w.streak++;
+    w.interval = Math.round(w.interval * 2.5) || 3;
+    if (w.interval > 30) w.interval = 30;
+  } else {
+    w.streak = 0;
+    w.interval = 1;
+  }
+
+  w.nextReview = now + w.interval * 86400000;
+  saveSRS(srs);
+  return w;
+}
+
+function updateSRSDueBadge() {
+  const badge = $("srs-due-count");
+  if (!badge) return;
+  const due = getDueWords().length;
+  if (due > 0) {
+    badge.textContent = `${due} từ cần ôn`;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+}
+
+// SRS Review state
+let srsState = { dueWords: [], currentIndex: 0, recording: null };
+
+async function startSRSReview() {
+  srsState.dueWords = getDueWords();
+  srsState.currentIndex = 0;
+  srsState.recording = null;
+
+  if (!srsState.dueWords.length) {
+    $("srs-empty").classList.remove("hidden");
+    $("srs-card").classList.add("hidden");
+    $("srs-result-area").classList.add("hidden");
+    $("srs-counter").textContent = "";
+    return;
+  }
+
+  $("srs-empty").classList.add("hidden");
+  $("srs-status").textContent = "Đang kết nối Azure Speech...";
+  $("srs-mic-btn").disabled = true;
+
+  try {
+    await initAzure();
+  } catch (e) {
+    $("srs-status").textContent = "Lỗi kết nối Azure: " + e;
+    return;
+  }
+
+  showSRSWord(0);
+}
+
+function showSRSWord(index) {
+  const w = srsState.dueWords[index];
+  if (!w) return;
+
+  srsState.currentIndex = index;
+  $("srs-counter").textContent = `Từ ${index + 1}/${srsState.dueWords.length}`;
+  $("srs-card").classList.remove("hidden");
+  $("srs-result-area").classList.add("hidden");
+  $("srs-next-btn").classList.add("hidden");
+
+  // Word display
+  $("srs-word-text").textContent = w.word;
+  $("srs-word-ipa").textContent = w.phonetic || (WORD_IPA[w.word] ? `/${WORD_IPA[w.word]}/` : "");
+
+  // Bad phonemes + tips
+  const badIPA = w.badPhonemes
+    .filter(p => SAPI_TO_IPA[p])
+    .map(p => `/${SAPI_TO_IPA[p]}/`)
+    .slice(0, 4);
+
+  const tips = w.badPhonemes
+    .map(p => PHONEME_TIPS[p])
+    .filter(Boolean)
+    .slice(0, 2);
+
+  $("srs-bad-phonemes").innerHTML = badIPA.length
+    ? `Âm hay sai: <strong>${badIPA.join(", ")}</strong>`
+    : "";
+
+  $("srs-tips").innerHTML = tips.length
+    ? tips.map(t => `<div class="srs-tip-item">${t}</div>`).join("")
+    : "";
+
+  // Mic ready
+  $("srs-mic-btn").disabled = false;
+  $("srs-mic-btn").classList.remove("recording");
+  $("srs-mic-btn").innerHTML = "&#127908; Đọc từ này";
+  $("srs-status").textContent = "Bấm mic để đọc";
+}
+
+async function onSRSMicPress() {
+  const btn = $("srs-mic-btn");
+  const w = srsState.dueWords[srsState.currentIndex];
+  if (!w) return;
+
+  // Already recording → stop
+  if (srsState.recording) {
+    btn.disabled = true;
+    $("srs-status").textContent = "Đang phân tích...";
+
+    const result = await srsState.recording.stop();
+    srsState.recording = null;
+
+    btn.classList.remove("recording");
+    btn.disabled = false;
+
+    if (!result || !result.transcript?.trim()) {
+      btn.innerHTML = "&#127908; Đọc lại";
+      $("srs-status").textContent = "Không nghe được gì. Bấm mic để thử lại.";
+      return;
+    }
+
+    showSRSResult(w, result);
+    return;
+  }
+
+  // Start recording
+  btn.classList.add("recording");
+  btn.innerHTML = "&#9632; Dừng thu âm";
+  $("srs-status").textContent = "Đang nghe... Đọc: " + w.word;
+
+  try {
+    srsState.recording = await assessScriptedSpeech({ referenceText: w.word });
+  } catch (e) {
+    srsState.recording = null;
+    btn.classList.remove("recording");
+    btn.innerHTML = "&#127908; Đọc lại";
+    $("srs-status").textContent = "Lỗi: " + e;
+  }
+}
+
+function showSRSResult(w, result) {
+  $("srs-result-area").classList.remove("hidden");
+  $("srs-next-btn").classList.remove("hidden");
+  $("srs-mic-btn").innerHTML = "&#127908; Đọc lại";
+
+  // Calculate score from phonemes
+  const allPhonemes = result.words.flatMap(rw => rw.phonemes || []);
+  const score = allPhonemes.length
+    ? Math.round(allPhonemes.reduce((s, p) => s + p.score, 0) / allPhonemes.length)
+    : Math.round(result.pronScore || 0);
+
+  // Update SRS
+  const updated = updateSRSWord(w.word, score);
+  recordPhonemeErrors(result.words, "normalized");
+
+  const passed = score >= 60;
+  const cls = passed ? "srs-pass" : "srs-fail";
+
+  // Colored word display
+  const wordHTML = result.words.length
+    ? coloredWordHTML(result.words[0].word || w.word, result.words[0].phonemes)
+    : w.word;
+
+  // Interval text
+  let intervalText;
+  if (updated) {
+    if (updated.interval >= 30) intervalText = "Ôn lại sau 1 tháng";
+    else if (updated.interval >= 14) intervalText = "Ôn lại sau 2 tuần";
+    else if (updated.interval >= 7) intervalText = "Ôn lại sau 1 tuần";
+    else intervalText = `Ôn lại sau ${updated.interval} ngày`;
+  } else {
+    intervalText = "Ôn lại ngày mai";
+  }
+
+  $("srs-result-area").innerHTML = `
+    <div class="srs-result-score ${cls}">
+      <div class="srs-result-word">${wordHTML}</div>
+      <div class="srs-result-number">${score}%</div>
+      <div class="srs-result-label">${passed ? "Tốt!" : "Cần luyện thêm"}</div>
+    </div>
+    <div class="srs-interval-info">
+      ${passed ? "✅" : "❌"} ${intervalText}
+      ${updated && updated.streak > 1 ? ` · 🔥 ${updated.streak} lần đúng liên tiếp` : ""}
+    </div>
+  `;
+
+  // Click word for phoneme popup
+  const wordEl = $("srs-result-area").querySelector(".srs-result-word");
+  if (wordEl && result.words.length) {
+    wordEl.style.cursor = "pointer";
+    wordEl.addEventListener("click", () => showPhonemePopup([result.words[0]], w.phonetic));
+  }
+
+  $("srs-status").textContent = "";
+}
+
+async function onSRSListen() {
+  const w = srsState.dueWords[srsState.currentIndex];
+  if (!w) return;
+  const btn = $("srs-listen-btn");
+  btn.disabled = true;
+  btn.innerHTML = "&#128264; Đang phát...";
+  try { await speak(w.word); } catch {}
+  btn.disabled = false;
+  btn.innerHTML = "&#128264; Nghe mẫu";
+}
+
+function onSRSNext() {
+  if (srsState.currentIndex + 1 < srsState.dueWords.length) {
+    showSRSWord(srsState.currentIndex + 1);
+  } else {
+    // Done
+    $("srs-card").classList.add("hidden");
+    $("srs-result-area").classList.add("hidden");
+    $("srs-next-btn").classList.add("hidden");
+    $("srs-counter").textContent = "";
+    $("srs-status").innerHTML = `<div style="text-align:center;padding:40px 0;">
+      <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+      <div style="font-size:16px;font-weight:600;">Hoàn thành!</div>
+      <div style="color:var(--text2);margin-top:8px;">Đã ôn xong ${srsState.dueWords.length} từ</div>
+    </div>`;
+  }
+}
+
+function bindSRSEvents() {
+  $("srs-mic-btn").addEventListener("click", onSRSMicPress);
+  $("srs-listen-btn").addEventListener("click", onSRSListen);
+  $("srs-next-btn").addEventListener("click", onSRSNext);
 }
 
 function wordContainsSAPIPhoneme(word, sapiPhoneme) {

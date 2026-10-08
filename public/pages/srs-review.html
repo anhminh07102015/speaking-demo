@@ -1,0 +1,28 @@
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+  <h3 style="margin:0;">Ôn từ sai</h3>
+  <span id="srs-counter" style="color:var(--text2);font-size:13px;"></span>
+</div>
+
+<div id="srs-empty" class="hidden" style="text-align:center;padding:40px 20px;color:var(--text2);">
+  <p style="font-size:48px;margin-bottom:12px;">🎉</p>
+  <p style="font-size:16px;font-weight:600;">Chưa có từ nào cần ôn!</p>
+  <p style="font-size:13px;margin-top:8px;">Hãy luyện tập để hệ thống tự động thu thập các từ phát âm sai.</p>
+</div>
+
+<div id="srs-card" class="srs-word-card hidden">
+  <div id="srs-word-text" class="srs-word-text"></div>
+  <div id="srs-word-ipa" class="srs-word-ipa"></div>
+  <button id="srs-listen-btn" class="btn srs-listen-btn">&#128264; Nghe mẫu</button>
+  <div id="srs-bad-phonemes" class="srs-bad-phonemes"></div>
+  <div id="srs-tips" class="srs-tips"></div>
+</div>
+
+<div id="srs-result-area" class="hidden"></div>
+
+<div class="controls">
+  <button class="mic-pill" id="srs-mic-btn" disabled>&#127908; Đọc từ này</button>
+</div>
+
+<button class="btn srs-next-btn hidden" id="srs-next-btn">Tiếp theo &rarr;</button>
+
+<p id="srs-status" style="text-align:center;color:var(--text2);font-size:14px;margin-top:12px;"></p>

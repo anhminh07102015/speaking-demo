@@ -1,4 +1,4 @@
-<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;">
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;">
   <h3 style="margin-bottom:16px;">Hồ sơ phát âm của bạn</h3>
   <p id="pron-profile-summary" style="color:var(--text2);font-size:14px;margin-bottom:20px;"></p>
 
@@ -9,6 +9,24 @@
   </div>
 
   <div id="pron-profile-list"></div>
+</div>
+
+<!-- SRS Section -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h3 style="margin:0;">Từ cần ôn tập</h3>
+    <span id="srs-due-badge" class="badge" style="background:#8b5cf6;color:white;"></span>
+  </div>
+
+  <div id="srs-word-list"></div>
+
+  <div id="srs-list-empty" class="hidden" style="text-align:center;padding:20px;color:var(--text2);font-size:14px;">
+    Chưa có từ nào. Luyện tập để hệ thống tự thu thập từ phát âm sai.
+  </div>
+
+  <div style="text-align:center;margin-top:16px;">
+    <button class="btn" id="srs-start-btn" style="background:#8b5cf6;color:white;border:none;padding:10px 24px;border-radius:var(--radius);cursor:pointer;font-size:14px;">🔄 Bắt đầu ôn tập</button>
+  </div>
 </div>
 
 <div style="margin-top:16px;text-align:center;">

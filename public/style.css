@@ -1523,3 +1523,111 @@ select:focus {
   color: #b45309;
   margin-top: 2px;
 }
+
+/* ============ SRS WORD LIST (in pron profile) ============ */
+.srs-list-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.srs-list-item:last-child { border-bottom: none; }
+.srs-list-word {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.srs-list-ipa { font-weight: 400; color: var(--text2); font-size: 13px; }
+.srs-list-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text2);
+  align-items: center;
+}
+.srs-list-bad { color: #dc2626; font-weight: 600; }
+.srs-list-status.srs-due { color: #8b5cf6; font-weight: 600; }
+.srs-list-status.srs-scheduled { color: #6b7280; }
+.srs-list-streak { font-size: 11px; }
+
+/* ============ SRS REVIEW SCREEN ============ */
+.srs-word-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.srs-word-text {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.srs-word-ipa {
+  font-size: 16px;
+  color: var(--text2);
+  margin-bottom: 16px;
+}
+.srs-listen-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.srs-bad-phonemes {
+  font-size: 14px;
+  color: #dc2626;
+  margin-bottom: 8px;
+}
+.srs-tips {
+  font-size: 12px;
+  color: var(--text2);
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.srs-tip-item {
+  padding: 4px 0;
+  border-left: 3px solid #f59e0b;
+  padding-left: 10px;
+  margin-bottom: 4px;
+}
+.srs-next-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+.srs-result-score {
+  text-align: center;
+  padding: 20px;
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+.srs-result-score.srs-pass {
+  background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
+  border: 1px solid #22c55e;
+}
+.srs-result-score.srs-fail {
+  background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+  border: 1px solid #f87171;
+}
+.srs-result-word { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+.srs-result-number { font-size: 36px; font-weight: 800; }
+.srs-pass .srs-result-number { color: #16a34a; }
+.srs-fail .srs-result-number { color: #dc2626; }
+.srs-result-label { font-size: 14px; color: var(--text2); margin-top: 4px; }
+.srs-interval-info {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text2);
+  padding: 8px;
+}

@@ -31,6 +31,37 @@ app.post("/api/llm", async (req, res) => {
   try {
     // Chọn endpoint + key theo provider
     const provider = process.env.LLM_PROVIDER || "anthropic";
+    if (provider === "google") {
+      const model = process.env.LLM_MODEL || "gemini-2.0-flash";
+      const apiKey = process.env.GOOGLE_API_KEY;
+      const contents = [];
+      // System instruction as first user message context
+      const geminiMessages = messages.map(m => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: system }] },
+            contents: geminiMessages,
+            generationConfig: {
+              maxOutputTokens: 2048,
+              ...(system.toLowerCase().includes("json") && {
+                responseMimeType: "application/json",
+              }),
+            },
+          }),
+        }
+      );
+      const d = await r.json();
+      if (d.error) return res.status(500).json({ error: d.error.message });
+      const text = d.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      return res.json({ text });
+    }
     if (provider === "openai" || provider === "deepseek") {
       const baseUrl = provider === "deepseek"
         ? "https://api.deepseek.com/chat/completions"

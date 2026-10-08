@@ -24,6 +24,11 @@ Tasks:
    "pronunciation": count } summarizing total errors by category.
 10. Decide next_question according to the MODE instructions in the user
    message.
+11. Write examiner_reaction: a brief, natural 1-sentence reaction to the
+   learner's answer (in English, warm and encouraging, referencing something
+   they said). This will be spoken aloud by TTS before the next question.
+   E.g., "That's interesting, I can see you really enjoy that." or
+   "I see, so you prefer studying at home."
 
 Respond with ONLY a JSON object matching this schema. No markdown, no preamble.
 
@@ -46,6 +51,7 @@ Respond with ONLY a JSON object matching this schema. No markdown, no preamble.
   "upgraded_answer": "the learner's answer rewritten at one band higher (English, same ideas, improved grammar/vocabulary)",
   "model_answer": "a band 8+ model answer for the same question (English, 2-4 sentences)",
   "error_categories": { "lexical": 0, "grammatical": 0, "pronunciation": 0 },
+  "examiner_reaction": "brief natural reaction to the learner's answer (English, 1 sentence)",
   "next_question": "câu hỏi tiếp theo bằng tiếng Anh, hoặc null",
   "next_question_reason": "lý do chọn câu này"
 }`;
